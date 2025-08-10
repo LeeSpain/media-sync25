@@ -9,6 +9,8 @@ const dict: Dict = {
   "nav.onboarding": { en: "Onboarding", es: "Inicio" },
   "nav.dashboard": { en: "Dashboard", es: "Panel" },
   "nav.getStarted": { en: "Get Started", es: "Comenzar" },
+  "nav.admin": { en: "Admin", es: "Admin" },
+
 
   // Landing
   "hero.title": { en: "AI Sales & Marketing Platform", es: "Plataforma de Ventas y Marketing con IA" },
@@ -76,6 +78,41 @@ const dict: Dict = {
   "dashboard.calendar": { en: "Campaign Calendar", es: "Calendario de campañas" },
   "dashboard.crm": { en: "CRM & Leads", es: "CRM y Leads" },
   "dashboard.performance": { en: "Performance", es: "Rendimiento" },
+
+  // Admin
+  "admin.title": { en: "Admin & Settings", es: "Admin y Ajustes" },
+  "admin.subtitle": { en: "Manage workspace preferences and connections.", es: "Gestiona preferencias y conexiones del espacio." },
+  "admin.metaDescription": { en: "Admin settings for your workspace.", es: "Ajustes de administración del espacio." },
+
+  "admin.sections.general": { en: "General", es: "General" },
+  "admin.sections.generalDesc": { en: "Basic workspace information.", es: "Información básica del espacio." },
+  "admin.fields.name": { en: "Business Name", es: "Nombre del negocio" },
+  "admin.fields.website": { en: "Website", es: "Sitio web" },
+  // Note: Keep placeholders separate to avoid collisions with global fields
+  "admin.placeholders.name": { en: "e.g., Acme Inc.", es: "p.ej., Acme S.A." },
+  "admin.placeholders.website": { en: "https://example.com", es: "https://ejemplo.com" },
+
+  "admin.sections.integrations": { en: "Integrations", es: "Integraciones" },
+  "admin.sections.integrationsDesc": { en: "Connect channels and providers.", es: "Conecta canales y proveedores." },
+  "admin.fields.emailProvider": { en: "Email Provider", es: "Proveedor de Email" },
+  "admin.fields.twilioNumber": { en: "Twilio Number", es: "Número de Twilio" },
+
+  "admin.sections.data": { en: "Data & Privacy", es: "Datos y Privacidad" },
+  "admin.sections.dataDesc": { en: "Export or delete workspace data.", es: "Exporta o elimina los datos del espacio." },
+
+  "admin.save": { en: "Save settings", es: "Guardar ajustes" },
+  "admin.export": { en: "Export JSON", es: "Exportar JSON" },
+  "admin.delete": { en: "Delete data", es: "Eliminar datos" },
+  "admin.confirmDeleteTitle": { en: "Delete data?", es: "¿Eliminar datos?" },
+  "admin.confirmDeleteBody": { en: "This will permanently remove saved admin settings from this device.", es: "Esto eliminará permanentemente los ajustes guardados en este dispositivo." },
+
+  // Common
+  "action.cancel": { en: "Cancel", es: "Cancelar" },
+  "action.confirm": { en: "Confirm", es: "Confirmar" },
+  "common.saved": { en: "Saved", es: "Guardado" },
+  "common.changesSaved": { en: "Your changes have been saved.", es: "Tus cambios han sido guardados." },
+  "common.deleted": { en: "Deleted", es: "Eliminado" },
+  "common.dataCleared": { en: "All admin settings were cleared.", es: "Se borraron todos los ajustes de administración." },
 };
 
 interface I18nContextValue {

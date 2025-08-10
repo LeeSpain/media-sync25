@@ -19,6 +19,9 @@ const Header = () => {
           <Link to="/dashboard" className={`px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground ${pathname.startsWith("/dashboard") ? "bg-accent text-accent-foreground" : ""}`}>
             {t("nav.dashboard")}
           </Link>
+          <Link to="/admin" className={`px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground ${pathname.startsWith("/admin") ? "bg-accent text-accent-foreground" : ""}`}>
+            {t("nav.admin")}
+          </Link>
           <div className="ml-2 flex items-center gap-1">
             <Button variant="outline" size="sm" aria-label="Switch language" onClick={() => setLang(lang === "en" ? "es" : "en")}> {lang.toUpperCase()} </Button>
             <Link to="/onboarding">
