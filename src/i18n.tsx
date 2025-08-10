@@ -100,6 +100,26 @@ const dict: Dict = {
   "admin.sections.data": { en: "Data & Privacy", es: "Datos y Privacidad" },
   "admin.sections.dataDesc": { en: "Export or delete workspace data.", es: "Exporta o elimina los datos del espacio." },
 
+  // AI Settings
+  "admin.sections.ai": { en: "AI Settings", es: "Ajustes de IA" },
+  "admin.sections.aiDesc": { en: "Configure providers and keys for all AI layers.", es: "Configura proveedores y claves para todas las capas de IA." },
+  "admin.ai.localWarning": { en: "Tip: Use Supabase Secrets for production. Saving keys here stores them in this device's localStorage only (not secure).", es: "Consejo: Usa Supabase Secrets en producción. Guardar claves aquí las almacena solo en el localStorage de este dispositivo (no es seguro)." },
+  "admin.ai.openaiApiKey": { en: "OpenAI API Key", es: "Clave de API de OpenAI" },
+  "admin.ai.emailProvider": { en: "Email Provider (ses|sendgrid|mailgun)", es: "Proveedor de Email (ses|sendgrid|mailgun)" },
+  "admin.ai.sesAccessKeyId": { en: "SES Access Key ID", es: "SES Access Key ID" },
+  "admin.ai.sesSecretAccessKey": { en: "SES Secret Access Key", es: "SES Secret Access Key" },
+  "admin.ai.sesRegion": { en: "SES Region", es: "Región de SES" },
+  "admin.ai.sendgridApiKey": { en: "SendGrid API Key", es: "Clave API de SendGrid" },
+  "admin.ai.mailgunApiKey": { en: "Mailgun API Key", es: "Clave API de Mailgun" },
+  "admin.ai.mailgunDomain": { en: "Mailgun Domain", es: "Dominio de Mailgun" },
+  "admin.ai.twilioAccountSid": { en: "Twilio Account SID", es: "Twilio Account SID" },
+  "admin.ai.twilioAuthToken": { en: "Twilio Auth Token", es: "Token de Autenticación de Twilio" },
+  "admin.ai.twilioWhatsAppNumber": { en: "Twilio WhatsApp Number", es: "Número de WhatsApp de Twilio" },
+  "admin.ai.appUrl": { en: "App URL", es: "URL de la app" },
+  "admin.ai.appTimezone": { en: "App Timezone", es: "Zona horaria de la app" },
+  "admin.ai.saveLocal": { en: "Save locally (temporary)", es: "Guardar localmente (temporal)" },
+  "admin.ai.healthCheck": { en: "Run Health Check", es: "Ejecutar comprobación" },
+
   "admin.save": { en: "Save settings", es: "Guardar ajustes" },
   "admin.export": { en: "Export JSON", es: "Exportar JSON" },
   "admin.delete": { en: "Delete data", es: "Eliminar datos" },
@@ -113,6 +133,8 @@ const dict: Dict = {
   "common.changesSaved": { en: "Your changes have been saved.", es: "Tus cambios han sido guardados." },
   "common.deleted": { en: "Deleted", es: "Eliminado" },
   "common.dataCleared": { en: "All admin settings were cleared.", es: "Se borraron todos los ajustes de administración." },
+  "common.missingFields": { en: "Missing required fields", es: "Faltan campos requeridos" },
+  "common.healthOk": { en: "Looks good", es: "Todo correcto" },
 };
 
 interface I18nContextValue {

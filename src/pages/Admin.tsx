@@ -18,28 +18,63 @@ type AdminSettings = {
   twilioNumber?: string;
 };
 
+type AISettings = {
+  openaiApiKey: string;
+  emailProvider: "" | "ses" | "sendgrid" | "mailgun";
+  sesAccessKeyId?: string;
+  sesSecretAccessKey?: string;
+  sesRegion?: string;
+  sendgridApiKey?: string;
+  mailgunApiKey?: string;
+  mailgunDomain?: string;
+  twilioAccountSid?: string;
+  twilioAuthToken?: string;
+  twilioWhatsAppNumber?: string;
+  metaAppId?: string;
+  metaAppSecret?: string;
+  metaRedirectUri?: string;
+  liClientId?: string;
+  liClientSecret?: string;
+  liRedirectUri?: string;
+  ttClientKey?: string;
+  ttClientSecret?: string;
+  ttRedirectUri?: string;
+  googleClientId?: string;
+  googleClientSecret?: string;
+  googleRedirectUri?: string;
+  appUrl?: string;
+  appTimezone?: string;
+};
+
 const Admin = () => {
   const { t } = useI18n();
   const { toast } = useToast();
 
   const [settings, setSettings] = useState<AdminSettings>({ name: "", website: "" });
+  const [ai, setAi] = useState<AISettings>({ openaiApiKey: "", emailProvider: "" });
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem(ADMIN_STORAGE_KEY);
-      if (saved) setSettings(JSON.parse(saved));
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setSettings(parsed);
+        if (parsed.ai) setAi(parsed.ai);
+      }
     } catch {}
   }, []);
 
   const canonical = useMemo(() => (typeof window !== "undefined" ? window.location.href : undefined), []);
 
   const handleSave = () => {
-    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(settings));
+    const toSave = { ...settings, ai } as any;
+    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(toSave));
     toast({ title: t("common.saved"), description: t("common.changesSaved") });
   };
 
   const handleExport = () => {
-    const blob = new Blob([JSON.stringify(settings, null, 2)], { type: "application/json" });
+    const toExport = { ...settings, ai } as any;
+    const blob = new Blob([JSON.stringify(toExport, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -51,9 +86,30 @@ const Admin = () => {
   const handleDelete = () => {
     localStorage.removeItem(ADMIN_STORAGE_KEY);
     setSettings({ name: "", website: "" });
+    setAi({ openaiApiKey: "", emailProvider: "" });
     toast({ title: t("common.deleted"), description: t("common.dataCleared") });
   };
 
+  const handleHealthCheck = () => {
+    const missing: string[] = [];
+    if (!ai.openaiApiKey) missing.push("OpenAI API Key");
+    if (ai.emailProvider === "ses") {
+      if (!ai.sesAccessKeyId) missing.push("SES_ACCESS_KEY_ID");
+      if (!ai.sesSecretAccessKey) missing.push("SES_SECRET_ACCESS_KEY");
+      if (!ai.sesRegion) missing.push("SES_REGION");
+    }
+    if (ai.emailProvider === "sendgrid" && !ai.sendgridApiKey) missing.push("SENDGRID_API_KEY");
+    if (ai.emailProvider === "mailgun") {
+      if (!ai.mailgunApiKey) missing.push("MAILGUN_API_KEY");
+      if (!ai.mailgunDomain) missing.push("MAILGUN_DOMAIN");
+    }
+
+    if (missing.length) {
+      toast({ title: t("common.missingFields"), description: missing.join(", "), variant: "destructive" as any });
+    } else {
+      toast({ title: t("common.healthOk"), description: t("admin.ai.localWarning") });
+    }
+  };
   return (
     <>
       <SEO title={`${t("admin.title")} | ${t("app.name")}`} description={t("admin.metaDescription")} canonical={canonical} />
@@ -100,6 +156,85 @@ const Admin = () => {
               </div>
               <div className="pt-2">
                 <Button variant="secondary" onClick={handleSave}>{t("admin.save")}</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>{t("admin.sections.ai")}</CardTitle>
+              <CardDescription>{t("admin.sections.aiDesc")}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <p className="text-sm text-muted-foreground md:col-span-2">{t("admin.ai.localWarning")}</p>
+
+              <div className="grid gap-2">
+                <Label htmlFor="openaiApiKey">{t("admin.ai.openaiApiKey")}</Label>
+                <Input id="openaiApiKey" type="password" value={ai.openaiApiKey} onChange={(e) => setAi((s) => ({ ...s, openaiApiKey: e.target.value }))} placeholder="sk-..." />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="aiEmailProvider">{t("admin.ai.emailProvider")}</Label>
+                <Input id="aiEmailProvider" value={ai.emailProvider} onChange={(e) => setAi((s) => ({ ...s, emailProvider: e.target.value as any }))} placeholder="ses | sendgrid | mailgun" />
+              </div>
+
+              {/* SES */}
+              <div className="grid gap-2">
+                <Label htmlFor="sesAccessKeyId">{t("admin.ai.sesAccessKeyId")}</Label>
+                <Input id="sesAccessKeyId" value={ai.sesAccessKeyId ?? ""} onChange={(e) => setAi((s) => ({ ...s, sesAccessKeyId: e.target.value }))} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="sesSecretAccessKey">{t("admin.ai.sesSecretAccessKey")}</Label>
+                <Input id="sesSecretAccessKey" type="password" value={ai.sesSecretAccessKey ?? ""} onChange={(e) => setAi((s) => ({ ...s, sesSecretAccessKey: e.target.value }))} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="sesRegion">{t("admin.ai.sesRegion")}</Label>
+                <Input id="sesRegion" value={ai.sesRegion ?? ""} onChange={(e) => setAi((s) => ({ ...s, sesRegion: e.target.value }))} />
+              </div>
+
+              {/* SendGrid */}
+              <div className="grid gap-2">
+                <Label htmlFor="sendgridApiKey">{t("admin.ai.sendgridApiKey")}</Label>
+                <Input id="sendgridApiKey" type="password" value={ai.sendgridApiKey ?? ""} onChange={(e) => setAi((s) => ({ ...s, sendgridApiKey: e.target.value }))} />
+              </div>
+
+              {/* Mailgun */}
+              <div className="grid gap-2">
+                <Label htmlFor="mailgunApiKey">{t("admin.ai.mailgunApiKey")}</Label>
+                <Input id="mailgunApiKey" type="password" value={ai.mailgunApiKey ?? ""} onChange={(e) => setAi((s) => ({ ...s, mailgunApiKey: e.target.value }))} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="mailgunDomain">{t("admin.ai.mailgunDomain")}</Label>
+                <Input id="mailgunDomain" value={ai.mailgunDomain ?? ""} onChange={(e) => setAi((s) => ({ ...s, mailgunDomain: e.target.value }))} />
+              </div>
+
+              {/* Twilio */}
+              <div className="grid gap-2">
+                <Label htmlFor="twilioAccountSid">{t("admin.ai.twilioAccountSid")}</Label>
+                <Input id="twilioAccountSid" value={ai.twilioAccountSid ?? ""} onChange={(e) => setAi((s) => ({ ...s, twilioAccountSid: e.target.value }))} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="twilioAuthToken">{t("admin.ai.twilioAuthToken")}</Label>
+                <Input id="twilioAuthToken" type="password" value={ai.twilioAuthToken ?? ""} onChange={(e) => setAi((s) => ({ ...s, twilioAuthToken: e.target.value }))} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="twilioWhatsAppNumber">{t("admin.ai.twilioWhatsAppNumber")}</Label>
+                <Input id="twilioWhatsAppNumber" value={ai.twilioWhatsAppNumber ?? ""} onChange={(e) => setAi((s) => ({ ...s, twilioWhatsAppNumber: e.target.value }))} placeholder="whatsapp:+34..." />
+              </div>
+
+              {/* OAuth basics */}
+              <div className="grid gap-2">
+                <Label htmlFor="appUrl">{t("admin.ai.appUrl")}</Label>
+                <Input id="appUrl" value={ai.appUrl ?? ""} onChange={(e) => setAi((s) => ({ ...s, appUrl: e.target.value }))} placeholder="https://yourapp.com" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="appTimezone">{t("admin.ai.appTimezone")}</Label>
+                <Input id="appTimezone" value={ai.appTimezone ?? ""} onChange={(e) => setAi((s) => ({ ...s, appTimezone: e.target.value }))} placeholder="Europe/Madrid" />
+              </div>
+
+              <div className="md:col-span-2 flex flex-wrap gap-3 pt-2">
+                <Button onClick={handleSave}>{t("admin.ai.saveLocal")}</Button>
+                <Button variant="outline" onClick={handleHealthCheck}>{t("admin.ai.healthCheck")}</Button>
               </div>
             </CardContent>
           </Card>
