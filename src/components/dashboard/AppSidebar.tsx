@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -22,10 +22,7 @@ import {
   MessageSquare,
   BarChart3,
   Settings,
-  Shield,
-  UserCheck,
 } from "lucide-react";
-import { useAdmin } from "@/hooks/useAdmin";
 
 type Item = { title: string; url: string; icon: LucideIcon };
 
@@ -50,9 +47,6 @@ const getNavCls = ({ isActive }: { isActive: boolean }) =>
 const AppSidebar = () => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { isAdmin } = useAdmin();
-  const location = useLocation();
-  const currentPath = location.pathname;
 
   return (
     <Sidebar className="border-r pt-14" collapsible="icon">
@@ -75,31 +69,6 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Admin</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink to="/dashboard/members" end className={getNavCls} aria-label="Members">
-                      <UserCheck className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>Members</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink to="/admin" end className={getNavCls} aria-label="Admin">
-                      <Shield className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>Admin</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
     </Sidebar>
   );
