@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import AdminOverview from "@/components/admin/panels/AdminOverview";
 
 type Item = { title: string; url: string; icon: LucideIcon };
 
@@ -56,18 +55,12 @@ const AppSidebar = () => {
   const [adminOpen, setAdminOpen] = useState(false);
 
   useEffect(() => {
-    const open = location.hash === "#admin";
+    const open = false; // overlay disabled in favor of full Admin routes
     setAdminOpen(open);
   }, [location]);
 
   const handleCloseAdmin = () => {
-    // remove the #admin hash but keep on settings page
-    if (location.pathname.startsWith("/dashboard/settings")) {
-      navigate("/dashboard/settings", { replace: true });
-    } else {
-      navigate(location.pathname, { replace: true });
-    }
-    setAdminOpen(false);
+    // overlay disabled
   };
 
   return (
@@ -97,7 +90,7 @@ const AppSidebar = () => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/dashboard/settings#admin" end className={getNavCls} aria-label="Admin">
+                  <NavLink to="/admin" end className={getNavCls} aria-label="Admin">
                     <Shield className="mr-2 h-4 w-4" />
                     {!collapsed && <span>Admin</span>}
                   </NavLink>
@@ -107,32 +100,6 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      {/* Admin Drawer overlay when hash = #admin */}
-      {adminOpen && (
-        <div className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm">
-          <div className="absolute inset-y-0 right-0 w-full md:w-[720px] lg:w-[860px] bg-background border-l shadow-xl overflow-y-auto">
-            <div className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
-              <div className="flex items-center justify-between p-4">
-                <div className="text-base font-semibold">Admin Console</div>
-                <button
-                  onClick={handleCloseAdmin}
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                  aria-label="Close Admin"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-            <AdminOverview />
-          </div>
-          <button
-            aria-label="Close Overlay"
-            onClick={handleCloseAdmin}
-            className="absolute inset-0 -z-10"
-          />
-        </div>
-      )}
     </Sidebar>
   );
 };

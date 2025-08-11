@@ -13,8 +13,9 @@ import {
 import { Shield, UserCheck } from "lucide-react";
 
 const adminItems = [
+  { title: "Overview", url: "/admin", icon: Shield },
   { title: "Members", url: "/admin/members", icon: UserCheck },
-  { title: "Admin Settings", url: "/admin", icon: Shield },
+  { title: "Admin Settings", url: "/admin/settings", icon: Shield },
 ] as const;
 
 const getNavCls = ({ isActive }: { isActive: boolean }) =>

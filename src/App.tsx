@@ -24,6 +24,10 @@ import Messages from "./pages/dashboard/Messages";
 import Analytics from "./pages/dashboard/Analytics";
 import Settings from "./pages/dashboard/Settings";
 import CalendarPage from "./pages/dashboard/Calendar";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminOverviewPage from "./pages/admin/Overview";
+import AdminMembersPage from "./pages/admin/Members";
+import AdminSettingsPage from "./pages/Admin";
 
 
 const queryClient = new QueryClient();
@@ -39,25 +43,30 @@ const App = () => {
           <Header />
           <Routes>
             <Route path="/" element={<Index />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Overview />} />
-            <Route path="planner" element={<Planner />} />
-            <Route path="content" element={<Content />} />
-            <Route path="crm" element={<CRM />} />
-            <Route path="automate" element={<Automations />} />
-            <Route path="social" element={<Social />} />
-            <Route path="email" element={<Email />} />
-            <Route path="messages" element={<Messages />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="calendar" element={<CalendarPage />} />
-          </Route>
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<Overview />} />
+              <Route path="planner" element={<Planner />} />
+              <Route path="content" element={<Content />} />
+              <Route path="crm" element={<CRM />} />
+              <Route path="automate" element={<Automations />} />
+              <Route path="social" element={<Social />} />
+              <Route path="email" element={<Email />} />
+              <Route path="messages" element={<Messages />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="calendar" element={<CalendarPage />} />
+            </Route>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminOverviewPage />} />
+              <Route path="members" element={<AdminMembersPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
+            </Route>
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
       </I18nProvider>
     </BrowserRouter>
   </QueryClientProvider>
