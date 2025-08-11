@@ -29,6 +29,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <Sonner />
+    <Toaster />
     <BrowserRouter>
       <I18nProvider>
         <Header />
