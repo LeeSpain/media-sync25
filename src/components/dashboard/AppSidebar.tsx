@@ -22,7 +22,9 @@ import {
   MessageSquare,
   BarChart3,
   Settings,
+  Shield,
 } from "lucide-react";
+import { useAdmin } from "@/hooks/useAdmin";
 
 type Item = { title: string; url: string; icon: LucideIcon };
 
@@ -47,9 +49,9 @@ const getNavCls = ({ isActive }: { isActive: boolean }) =>
 const AppSidebar = () => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { isAdmin } = useAdmin();
   const location = useLocation();
   const currentPath = location.pathname;
-  const isExpanded = items.some((i) => i.url === currentPath);
 
   return (
     <Sidebar className="border-r pt-14" collapsible="icon">
@@ -71,6 +73,24 @@ const AppSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/admin" end className={getNavCls} aria-label="Admin">
+                      <Shield className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Admin</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );

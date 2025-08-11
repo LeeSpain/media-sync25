@@ -23,6 +23,7 @@ import Email from "./pages/dashboard/Email";
 import Messages from "./pages/dashboard/Messages";
 import Analytics from "./pages/dashboard/Analytics";
 import Settings from "./pages/dashboard/Settings";
+import AdminGate from "./components/auth/AdminGate";
 
 const queryClient = new QueryClient();
 
@@ -50,7 +51,9 @@ const App = () => (
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<Settings />} />
           </Route>
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={<DashboardLayout />}>
+            <Route index element={<AdminGate><Admin /></AdminGate>} />
+          </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
