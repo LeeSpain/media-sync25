@@ -31,6 +31,7 @@ import AdminSettingsPage from "./pages/admin/Settings";
 import AdminCRM from "./pages/admin/CRM";
 import AdminPlanner from "./pages/admin/Planner";
 import AdminContent from "./pages/admin/Content";
+import AdminVideo from "./pages/admin/Video";
 import AdminSocial from "./pages/admin/Social";
 import AdminEmail from "./pages/admin/Email";
 import AdminMessages from "./pages/admin/Messages";
@@ -75,6 +76,7 @@ const App = () => {
               <Route path="crm" element={<AdminCRM />} />
               <Route path="planner" element={<AdminPlanner />} />
               <Route path="content" element={<AdminContent />} />
+              <Route path="video" element={<AdminVideo />} />
               <Route path="social" element={<AdminSocial />} />
               <Route path="email" element={<AdminEmail />} />
               <Route path="messages" element={<AdminMessages />} />
