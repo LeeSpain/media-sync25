@@ -122,7 +122,7 @@ const Settings = () => {
         </Card>
       </section>
       {isAdmin && (
-        <section>
+        <section id="admin">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Admin settings</CardTitle>
