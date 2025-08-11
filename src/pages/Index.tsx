@@ -5,6 +5,8 @@ import { useI18n } from "@/i18n";
 
 const Index = () => {
   const { t } = useI18n();
+  console.log("Index component loaded, t function:", t);
+  console.log("Hero title:", t("hero.title"));
   return (
     <>
       <SEO
