@@ -23,6 +23,7 @@ import Email from "./pages/dashboard/Email";
 import Messages from "./pages/dashboard/Messages";
 import Analytics from "./pages/dashboard/Analytics";
 import Settings from "./pages/dashboard/Settings";
+import CalendarPage from "./pages/dashboard/Calendar";
 import AdminGate from "./components/auth/AdminGate";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="messages" element={<Messages />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="calendar" element={<CalendarPage />} />
           </Route>
           <Route path="/admin" element={<DashboardLayout />}>
             <Route index element={<AdminGate><Admin /></AdminGate>} />

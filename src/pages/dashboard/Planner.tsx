@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import SEO from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ const Planner = () => {
           <p className="text-muted-foreground">Plan, schedule, and track campaigns across channels.</p>
         </div>
         <div className="flex gap-2">
+          <Link to="/dashboard/calendar"><Button variant="outline">Calendar</Button></Link>
           <Button variant="secondary">Import Schedule</Button>
           <Button>Create Campaign</Button>
         </div>

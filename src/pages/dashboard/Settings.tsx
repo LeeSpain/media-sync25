@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import ProfileSection from "@/components/settings/ProfileSection";
+import OnboardingSummary from "@/components/settings/OnboardingSummary";
 
 const Settings = () => {
   const { toast } = useToast();
@@ -86,11 +88,19 @@ const Settings = () => {
   };
 
   return (
-    <main>
-      <SEO title="Media-Sync Settings" description="Manage account and workspace preferences." canonical={window.location.href} />
-      <h1 className="text-2xl md:text-3xl font-bold mb-4">Settings</h1>
+    <main className="container py-6 space-y-6">
+      <SEO title="Settings | Media-Sync" description="Manage your profile, workspace, and data preferences." canonical={window.location.href} />
+      <header>
+        <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground">Profile, onboarding, and data controls.</p>
+      </header>
 
       <section className="grid gap-4 lg:grid-cols-2">
+        <ProfileSection />
+        <OnboardingSummary />
+      </section>
+
+      <section>
         <Card className="border-destructive/30">
           <CardHeader>
             <CardTitle className="text-base">Danger zone</CardTitle>
