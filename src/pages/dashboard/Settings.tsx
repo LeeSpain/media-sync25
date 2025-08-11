@@ -6,10 +6,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ProfileSection from "@/components/settings/ProfileSection";
 import OnboardingSummary from "@/components/settings/OnboardingSummary";
+import { useAdmin } from "@/hooks/useAdmin";
 
 const Settings = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const { isAdmin } = useAdmin();
 
   const resetAllData = async () => {
     if (!confirm("This will permanently delete all your CRM and campaign data. Continue?")) return;
@@ -119,6 +121,21 @@ const Settings = () => {
           </CardFooter>
         </Card>
       </section>
+      {isAdmin && (
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Admin settings</CardTitle>
+              <CardDescription>Platform controls for administrators.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Admin controls will appear here. We’ll move agent, tools, and knowledge management into this section.
+              </p>
+            </CardContent>
+          </Card>
+        </section>
+      )}
     </main>
   );
 };

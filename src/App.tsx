@@ -9,7 +9,7 @@ import NotFound from "./pages/NotFound";
 import Header from "./components/layout/Header";
 import { I18nProvider } from "./i18n";
 import Onboarding from "./pages/Onboarding";
-import Admin from "./pages/Admin";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
@@ -24,9 +24,7 @@ import Messages from "./pages/dashboard/Messages";
 import Analytics from "./pages/dashboard/Analytics";
 import Settings from "./pages/dashboard/Settings";
 import CalendarPage from "./pages/dashboard/Calendar";
-import Members from "./pages/dashboard/Members";
-import AdminGate from "./components/auth/AdminGate";
-import AdminLayout from "./components/admin/AdminLayout";
+
 
 const queryClient = new QueryClient();
 
@@ -56,10 +54,6 @@ const App = () => {
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<Settings />} />
             <Route path="calendar" element={<CalendarPage />} />
-          </Route>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminGate><Admin /></AdminGate>} />
-            <Route path="members" element={<AdminGate><Members /></AdminGate>} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
