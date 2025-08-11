@@ -163,12 +163,17 @@ const Members = () => {
   const getInitials = (member: UserWithProfile) => {
     const contact = member.crm_contacts?.[0];
     if (contact?.first_name && contact?.last_name) {
-      return `${contact.first_name[0]}${contact.last_name[0]}`;
+      return `${contact.first_name[0]}${contact.last_name[0]}`.toUpperCase();
     }
     if (member.profiles?.display_name) {
-      return member.profiles.display_name.split(' ').map(n => n[0]).join('').toUpperCase();
+      return member.profiles.display_name
+        .split(' ')
+        .filter(n => n.length > 0)
+        .map(n => n[0])
+        .join('')
+        .toUpperCase();
     }
-    return member.email[0].toUpperCase();
+    return member.email?.[0]?.toUpperCase() || 'U';
   };
 
   return (
