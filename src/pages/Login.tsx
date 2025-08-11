@@ -5,29 +5,61 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { useI18n } from "@/i18n";
-import { Link } from "react-router-dom";
-import { FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FormEvent, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const { t } = useI18n();
+  const navigate = useNavigate();
 
-  const onSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: t("auth.loginPending") || "Login pending",
-      description:
-        t("auth.connectSupabase") ||
-        "Please connect Supabase to enable email/password and Google login.",
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) navigate("/dashboard", { replace: true });
     });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) navigate("/dashboard", { replace: true });
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget as HTMLFormElement;
+    const fd = new FormData(form);
+    const email = String(fd.get("email") || "");
+    const password = String(fd.get("password") || "");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Signed in", description: "Redirecting to dashboard..." });
+      navigate("/dashboard", { replace: true });
+    }
   };
 
-  const onGoogle = () => {
-    toast({
-      title: t("auth.googlePending") || "Google sign-in pending",
-      description:
-        t("auth.connectSupabase") ||
-        "Please connect Supabase to enable Google OAuth.",
+  const onGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/` },
     });
+    if (error) {
+      toast({
+        title: "Google sign-in failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Continue in Google",
+        description: "Complete sign-in in the opened window.",
+      });
+    }
   };
 
   return (
@@ -53,11 +85,11 @@ const Login = () => {
             <form onSubmit={onSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">{t("auth.email") || "Email"}</Label>
-                <Input id="email" type="email" required placeholder="you@company.com" />
+                <Input id="email" name="email" type="email" required placeholder="you@company.com" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">{t("auth.password") || "Password"}</Label>
-                <Input id="password" type="password" required placeholder="••••••••" />
+                <Input id="password" name="password" type="password" required placeholder="••••••••" />
               </div>
               <Button type="submit" className="w-full">
                 {t("auth.login") || "Login"}
