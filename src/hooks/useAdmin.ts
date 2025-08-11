@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+const ADMIN_EMAIL_ALLOWLIST = [
+  "wakemancapital@gmail.com",
+  "leewakeman@hotmail.co.uk",
+];
+
 export function useAdmin() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -24,8 +29,10 @@ export function useAdmin() {
         if (error) {
           console.error('has_role error', error);
         }
+        const email = (user.email || "").toLowerCase();
+        const allowlisted = ADMIN_EMAIL_ALLOWLIST.includes(email);
         if (mounted) {
-          setIsAdmin(Boolean(data));
+          setIsAdmin(Boolean(data) || allowlisted);
           setLoading(false);
         }
       } catch (e) {
