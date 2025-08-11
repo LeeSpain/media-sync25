@@ -10,12 +10,18 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Shield, UserCheck } from "lucide-react";
+import { Shield, Briefcase, Calendar, BookOpenText, Hash, Mail, MessageSquareText, BarChart3, Settings as SettingsIcon } from "lucide-react";
 
 const adminItems = [
   { title: "Overview", url: "/admin", icon: Shield },
-  { title: "Members", url: "/admin/members", icon: UserCheck },
-  { title: "Admin Settings", url: "/admin/settings", icon: Shield },
+  { title: "CRM", url: "/admin/crm", icon: Briefcase },
+  { title: "Planner", url: "/admin/planner", icon: Calendar },
+  { title: "Content", url: "/admin/content", icon: BookOpenText },
+  { title: "Social", url: "/admin/social", icon: Hash },
+  { title: "Email", url: "/admin/email", icon: Mail },
+  { title: "Messages", url: "/admin/messages", icon: MessageSquareText },
+  { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
+  { title: "Admin Settings", url: "/admin/settings", icon: SettingsIcon },
 ] as const;
 
 const getNavCls = ({ isActive }: { isActive: boolean }) =>

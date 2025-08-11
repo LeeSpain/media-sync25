@@ -28,10 +28,17 @@ import AdminLayout from "./components/admin/AdminLayout";
 import AdminOverviewPage from "./pages/admin/Overview";
 import AdminMembersPage from "./pages/admin/Members";
 import AdminSettingsPage from "./pages/admin/Settings";
-
-
+import AdminCRM from "./pages/admin/CRM";
+import AdminPlanner from "./pages/admin/Planner";
+import AdminContent from "./pages/admin/Content";
+import AdminSocial from "./pages/admin/Social";
+import AdminEmail from "./pages/admin/Email";
+import AdminMessages from "./pages/admin/Messages";
+import AdminAnalytics from "./pages/admin/Analytics";
+ 
+ 
 const queryClient = new QueryClient();
-
+ 
 const App = () => {
   console.log("App component loaded");
   return (
@@ -63,6 +70,13 @@ const App = () => {
               <Route index element={<AdminOverviewPage />} />
               <Route path="members" element={<AdminMembersPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
+              <Route path="crm" element={<AdminCRM />} />
+              <Route path="planner" element={<AdminPlanner />} />
+              <Route path="content" element={<AdminContent />} />
+              <Route path="social" element={<AdminSocial />} />
+              <Route path="email" element={<AdminEmail />} />
+              <Route path="messages" element={<AdminMessages />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
@@ -72,5 +86,5 @@ const App = () => {
   </QueryClientProvider>
   );
 };
-
+ 
 export default App;
