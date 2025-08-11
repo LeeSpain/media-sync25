@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { Plus, Eye, Edit } from "lucide-react";
+import ContactForm from "./ContactForm";
+import ContactDetailsModal from "./ContactDetailsModal";
 
 type Contact = {
   id: string;
@@ -20,10 +23,9 @@ const ContactsList = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName]   = useState("");
-  const [email, setEmail]         = useState("");
-  const [phone, setPhone]         = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [showDetails, setShowDetails] = useState<string | null>(null);
+  const [editingContact, setEditingContact] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["crm_contacts"],
@@ -39,84 +41,96 @@ const ContactsList = () => {
 
   const contacts = useMemo(() => data ?? [], [data]);
 
-  const onAdd = async () => {
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !userData.user) {
-      toast({ title: "Not signed in", description: "Please log in to add contacts." });
-      return;
-    }
-    const created_by = userData.user.id;
-    const payload = {
-      created_by,
-      first_name: firstName || null,
-      last_name: lastName || null,
-      email: email || null,
-      phone: phone || null,
-    };
-    const { error } = await supabase.from("crm_contacts").insert([payload]);
-    if (error) {
-      console.error("Add contact error:", error);
-      toast({ title: "Error", description: error.message });
-      return;
-    }
-    setFirstName("");
-    setLastName("");
-    setEmail("");
-    setPhone("");
-    toast({ title: "Contact added" });
+  const handleFormSuccess = () => {
     qc.invalidateQueries({ queryKey: ["crm_contacts"] });
   };
 
-  return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Quick add contact</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Input placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-            <Input placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Input placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <Input placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </div>
-          <div className="flex justify-end">
-            <Button onClick={onAdd}>Add contact</Button>
-          </div>
-        </CardContent>
-      </Card>
+  const handleEdit = (contact: any) => {
+    setEditingContact(contact);
+    setShowForm(true);
+  };
 
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="text-base">Contacts</CardTitle>
-        </CardHeader>
-        <CardContent>
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setEditingContact(null);
+  };
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Contacts</h2>
+        <Button onClick={() => setShowForm(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          New Contact
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-6">
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Loading...</p>
           ) : contacts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No contacts yet. Create your first contact above.</p>
+            <p className="text-sm text-muted-foreground">No contacts yet. Click "New Contact" to add your first contact.</p>
           ) : (
-            <ul className="divide-y">
+            <div className="space-y-4">
               {contacts.map((c) => (
-                <li key={c.id} className="py-3 flex items-center justify-between">
-                  <div className="min-w-0">
+                <div key={c.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium truncate">
                       {(c.first_name || "") + " " + (c.last_name || "") || "Unnamed"}
                     </p>
                     <p className="text-sm text-muted-foreground truncate">
                       {c.email || "—"} {c.phone ? "• " + c.phone : ""}
                     </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(c.created_at).toLocaleDateString()}
+                    </p>
                   </div>
-                  <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</span>
-                </li>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowDetails(c.id)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEdit(c)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </CardContent>
       </Card>
-    </div>
+
+      {showForm && (
+        <ContactForm
+          contact={editingContact}
+          onClose={handleCloseForm}
+          onSuccess={handleFormSuccess}
+        />
+      )}
+
+      {showDetails && (
+        <ContactDetailsModal
+          contactId={showDetails}
+          onClose={() => setShowDetails(null)}
+          onEdit={() => {
+            const contact = contacts.find(c => c.id === showDetails);
+            if (contact) {
+              setShowDetails(null);
+              handleEdit(contact);
+            }
+          }}
+        />
+      )}
+    </>
   );
 };
 

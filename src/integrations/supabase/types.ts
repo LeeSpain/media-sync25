@@ -110,34 +110,58 @@ export type Database = {
       crm_companies: {
         Row: {
           address: string | null
+          annual_revenue: number | null
+          city: string | null
+          country: string | null
           created_at: string
           created_by: string
+          description: string | null
           email: string | null
+          employee_count: number | null
           id: string
+          industry: string | null
           name: string
           phone: string | null
+          postal_code: string | null
+          state: string | null
           updated_at: string
           website: string | null
         }
         Insert: {
           address?: string | null
+          annual_revenue?: number | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           created_by: string
+          description?: string | null
           email?: string | null
+          employee_count?: number | null
           id?: string
+          industry?: string | null
           name: string
           phone?: string | null
+          postal_code?: string | null
+          state?: string | null
           updated_at?: string
           website?: string | null
         }
         Update: {
           address?: string | null
+          annual_revenue?: number | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string
+          description?: string | null
           email?: string | null
+          employee_count?: number | null
           id?: string
+          industry?: string | null
           name?: string
           phone?: string | null
+          postal_code?: string | null
+          state?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -175,43 +199,73 @@ export type Database = {
       }
       crm_contacts: {
         Row: {
+          address: string | null
+          city: string | null
           company_id: string | null
+          country: string | null
           created_at: string
           created_by: string
+          date_of_birth: string | null
           email: string | null
           first_name: string | null
           id: string
           job_title: string | null
           last_name: string | null
+          mobile_phone: string | null
           notes: string | null
+          personal_email: string | null
           phone: string | null
+          postal_code: string | null
+          state: string | null
           updated_at: string
+          work_email: string | null
+          work_phone: string | null
         }
         Insert: {
+          address?: string | null
+          city?: string | null
           company_id?: string | null
+          country?: string | null
           created_at?: string
           created_by: string
+          date_of_birth?: string | null
           email?: string | null
           first_name?: string | null
           id?: string
           job_title?: string | null
           last_name?: string | null
+          mobile_phone?: string | null
           notes?: string | null
+          personal_email?: string | null
           phone?: string | null
+          postal_code?: string | null
+          state?: string | null
           updated_at?: string
+          work_email?: string | null
+          work_phone?: string | null
         }
         Update: {
+          address?: string | null
+          city?: string | null
           company_id?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string
+          date_of_birth?: string | null
           email?: string | null
           first_name?: string | null
           id?: string
           job_title?: string | null
           last_name?: string | null
+          mobile_phone?: string | null
           notes?: string | null
+          personal_email?: string | null
           phone?: string | null
+          postal_code?: string | null
+          state?: string | null
           updated_at?: string
+          work_email?: string | null
+          work_phone?: string | null
         }
         Relationships: [
           {
@@ -305,6 +359,60 @@ export type Database = {
             columns: ["stage_id"]
             isOneToOne: false
             referencedRelation: "crm_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_links: {
+        Row: {
+          company_id: string | null
+          contact_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          is_primary: boolean | null
+          label: string | null
+          link_type: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          is_primary?: boolean | null
+          label?: string | null
+          link_type: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_primary?: boolean | null
+          label?: string | null
+          link_type?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_links_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "crm_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_links_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
             referencedColumns: ["id"]
           },
         ]
