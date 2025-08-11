@@ -22,6 +22,7 @@ import {
   MessageSquareText,
   Settings,
   Shield,
+  Video as VideoIcon,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -34,6 +35,7 @@ const items: Item[] = [
   { title: "CRM", url: "/dashboard/crm", icon: Briefcase },
   { title: "Planner", url: "/dashboard/planner", icon: Calendar },
   { title: "Content", url: "/dashboard/content", icon: BookOpenText },
+  { title: "Video", url: "/dashboard/video", icon: VideoIcon },
   { title: "Social", url: "/dashboard/social", icon: Hash },
   { title: "Email", url: "/dashboard/email", icon: Mail },
   { title: "Messages", url: "/dashboard/messages", icon: MessageSquareText },
@@ -74,6 +76,8 @@ const AppSidebar = () => {
         return flags.module_planner?.enabled !== false;
       case 'content':
         return flags.module_content?.enabled !== false;
+      case 'video':
+        return flags.module_social_youtube?.enabled !== false;
       case 'social':
         return flags.module_social?.enabled !== false;
       case 'email':

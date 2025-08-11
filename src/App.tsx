@@ -24,6 +24,7 @@ import Messages from "./pages/dashboard/Messages";
 import Analytics from "./pages/dashboard/Analytics";
 import Settings from "./pages/dashboard/Settings";
 import CalendarPage from "./pages/dashboard/Calendar";
+import DashboardVideo from "./pages/dashboard/Video";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminOverviewPage from "./pages/admin/Overview";
 import AdminMembersPage from "./pages/admin/Members";
@@ -31,7 +32,7 @@ import AdminSettingsPage from "./pages/admin/Settings";
 import AdminCRM from "./pages/admin/CRM";
 import AdminPlanner from "./pages/admin/Planner";
 import AdminContent from "./pages/admin/Content";
-import AdminVideo from "./pages/admin/Video";
+
 import AdminSocial from "./pages/admin/Social";
 import AdminEmail from "./pages/admin/Email";
 import AdminMessages from "./pages/admin/Messages";
@@ -66,6 +67,7 @@ const App = () => {
               <Route path="email" element={<ModuleGate module="module_email"><Email /></ModuleGate>} />
               <Route path="messages" element={<ModuleGate module="module_messages"><Messages /></ModuleGate>} />
               <Route path="analytics" element={<ModuleGate module="module_analytics"><Analytics /></ModuleGate>} />
+              <Route path="video" element={<ModuleGate module="module_social_youtube"><DashboardVideo /></ModuleGate>} />
               <Route path="settings" element={<Settings />} />
               <Route path="calendar" element={<CalendarPage />} />
             </Route>
@@ -76,7 +78,7 @@ const App = () => {
               <Route path="crm" element={<AdminCRM />} />
               <Route path="planner" element={<AdminPlanner />} />
               <Route path="content" element={<AdminContent />} />
-              <Route path="video" element={<AdminVideo />} />
+              
               <Route path="social" element={<AdminSocial />} />
               <Route path="email" element={<AdminEmail />} />
               <Route path="messages" element={<AdminMessages />} />
