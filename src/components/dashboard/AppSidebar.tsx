@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -44,8 +45,14 @@ const getNavCls = ({ isActive }: { isActive: boolean }) =>
     : "hover:bg-accent hover:text-accent-foreground";
 
 const AppSidebar = () => {
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const isExpanded = items.some((i) => i.url === currentPath);
+
   return (
-    <Sidebar className="w-60 border-r pt-14">
+    <Sidebar className="border-r pt-14" collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Media-Sync</SidebarGroupLabel>
@@ -54,9 +61,9 @@ const AppSidebar = () => {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end className={getNavCls}>
+                    <NavLink to={item.url} end className={getNavCls} aria-label={item.title}>
                       <item.icon className="mr-2 h-4 w-4" />
-                      <span>{item.title}</span>
+                      {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
