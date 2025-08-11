@@ -24,12 +24,13 @@ import {
   Shield,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useModuleFlags } from "@/hooks/useModuleFlags";
 
 type Item = { title: string; url: string; icon: LucideIcon };
 
 const items: Item[] = [
-  { title: "Overview", url: "/dashboard/overview", icon: Home },
+  { title: "Overview", url: "/dashboard", icon: Home },
   { title: "CRM", url: "/dashboard/crm", icon: Briefcase },
   { title: "Planner", url: "/dashboard/planner", icon: Calendar },
   { title: "Content", url: "/dashboard/content", icon: BookOpenText },
@@ -53,6 +54,7 @@ const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [adminOpen, setAdminOpen] = useState(false);
+  const { flags } = useModuleFlags();
 
   useEffect(() => {
     const open = false; // overlay disabled in favor of full Admin routes
@@ -63,6 +65,32 @@ const AppSidebar = () => {
     // overlay disabled
   };
 
+  const isItemEnabled = (url: string) => {
+    const slug = url.replace('/dashboard/', '');
+    switch (slug) {
+      case 'crm':
+        return flags.module_crm?.enabled !== false;
+      case 'planner':
+        return flags.module_planner?.enabled !== false;
+      case 'content':
+        return flags.module_content?.enabled !== false;
+      case 'social':
+        return flags.module_social?.enabled !== false;
+      case 'email':
+        return flags.module_email?.enabled !== false;
+      case 'messages':
+        return flags.module_messages?.enabled !== false;
+      case 'analytics':
+        return flags.module_analytics?.enabled !== false;
+      case 'settings':
+        return true;
+      case '': // overview
+        return true;
+      default:
+        return true;
+    }
+  };
+
   return (
     <Sidebar className="border-r pt-14" collapsible="icon">
       <SidebarContent>
@@ -70,16 +98,27 @@ const AppSidebar = () => {
           <SidebarGroupLabel>Platform</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end className={getNavCls} aria-label={item.title}>
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items
+                .filter((item) => {
+                  // Hide items when module flags are disabled
+                  const path = item.url.replace('/dashboard/', '');
+                  switch (path) {
+                    case 'crm':
+                      return true; // filtered via flags in AppSidebar? handled below
+                    default:
+                      return true;
+                  }
+                })
+                .map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink to={item.url} end className={getNavCls} aria-label={item.title}>
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

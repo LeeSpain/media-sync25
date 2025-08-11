@@ -3,6 +3,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { usePlatformSetting } from "@/hooks/usePlatformSetting";
+import { memo } from "react";
+
+const ProviderToggle = memo(function ProviderToggle({ settingKey, label }: { settingKey: string; label: string }) {
+  const { value, isLoading, save, saving } = usePlatformSetting<{ enabled: boolean }>(settingKey, { enabled: true });
+  return (
+    <div className="flex items-center gap-3">
+      <Switch
+        id={settingKey}
+        checked={!!value.enabled}
+        onCheckedChange={(checked) => save({ enabled: checked })}
+        disabled={isLoading || saving}
+      />
+      <Label htmlFor={settingKey}>{label}</Label>
+    </div>
+  );
+});
 
 const AdminSocial = () => {
   const { value, isLoading, save, saving } = usePlatformSetting<{ enabled: boolean }>(
@@ -32,6 +48,19 @@ const AdminSocial = () => {
               />
               <Label htmlFor="social-enabled">Enable Social</Label>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Providers</CardTitle>
+            <CardDescription>Enable or disable specific providers and the scheduler.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <ProviderToggle settingKey="module_social_twitter" label="Twitter / X" />
+            <ProviderToggle settingKey="module_social_linkedin" label="LinkedIn" />
+            <ProviderToggle settingKey="module_social_meta" label="Meta (Facebook/Instagram)" />
+            <ProviderToggle settingKey="module_social_scheduler" label="Publishing Scheduler" />
           </CardContent>
         </Card>
 

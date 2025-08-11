@@ -1,1 +1,4 @@
 project_id = "hzviynazgmbvdinbyxbx"
+
+[functions.get-module-flags]
+verify_jwt = false

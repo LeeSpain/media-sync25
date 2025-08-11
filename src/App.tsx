@@ -35,6 +35,8 @@ import AdminSocial from "./pages/admin/Social";
 import AdminEmail from "./pages/admin/Email";
 import AdminMessages from "./pages/admin/Messages";
 import AdminAnalytics from "./pages/admin/Analytics";
+import AdminGate from "./components/auth/AdminGate";
+import ModuleGate from "./components/auth/ModuleGate";
  
  
 const queryClient = new QueryClient();
@@ -55,18 +57,18 @@ const App = () => {
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/dashboard" element={<DashboardLayout />}>
               <Route index element={<Overview />} />
-              <Route path="planner" element={<Planner />} />
-              <Route path="content" element={<Content />} />
-              <Route path="crm" element={<CRM />} />
+              <Route path="planner" element={<ModuleGate module="module_planner"><Planner /></ModuleGate>} />
+              <Route path="content" element={<ModuleGate module="module_content"><Content /></ModuleGate>} />
+              <Route path="crm" element={<ModuleGate module="module_crm"><CRM /></ModuleGate>} />
               <Route path="automate" element={<Automations />} />
-              <Route path="social" element={<Social />} />
-              <Route path="email" element={<Email />} />
-              <Route path="messages" element={<Messages />} />
-              <Route path="analytics" element={<Analytics />} />
+              <Route path="social" element={<ModuleGate module="module_social"><Social /></ModuleGate>} />
+              <Route path="email" element={<ModuleGate module="module_email"><Email /></ModuleGate>} />
+              <Route path="messages" element={<ModuleGate module="module_messages"><Messages /></ModuleGate>} />
+              <Route path="analytics" element={<ModuleGate module="module_analytics"><Analytics /></ModuleGate>} />
               <Route path="settings" element={<Settings />} />
               <Route path="calendar" element={<CalendarPage />} />
             </Route>
-            <Route path="/admin" element={<AdminLayout />}>
+            <Route path="/admin" element={<AdminGate><AdminLayout /></AdminGate>}>
               <Route index element={<AdminOverviewPage />} />
               <Route path="members" element={<AdminMembersPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
