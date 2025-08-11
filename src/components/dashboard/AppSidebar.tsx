@@ -45,7 +45,7 @@ const getNavCls = ({ isActive }: { isActive: boolean }) =>
 
 const AppSidebar = () => {
   return (
-    <Sidebar className="w-60 border-r">
+    <Sidebar className="w-60 border-r pt-14">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Media-Sync</SidebarGroupLabel>
