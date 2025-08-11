@@ -27,7 +27,7 @@ import CalendarPage from "./pages/dashboard/Calendar";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminOverviewPage from "./pages/admin/Overview";
 import AdminMembersPage from "./pages/admin/Members";
-import AdminSettingsPage from "./pages/Admin";
+import AdminSettingsPage from "./pages/admin/Settings";
 
 
 const queryClient = new QueryClient();
