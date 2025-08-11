@@ -17,6 +17,7 @@ const defaultFlags: ModuleFlags = {
   module_social_linkedin: { enabled: true },
   module_social_meta: { enabled: true },
   module_social_scheduler: { enabled: true },
+  module_social_youtube: { enabled: true },
 };
 
 export function useModuleFlags() {

@@ -59,6 +59,7 @@ const AdminSocial = () => {
           <CardContent className="grid gap-4 md:grid-cols-2">
             <ProviderToggle settingKey="module_social_twitter" label="Twitter / X" />
             <ProviderToggle settingKey="module_social_linkedin" label="LinkedIn" />
+            <ProviderToggle settingKey="module_social_youtube" label="YouTube" />
             <ProviderToggle settingKey="module_social_meta" label="Meta (Facebook/Instagram)" />
             <ProviderToggle settingKey="module_social_scheduler" label="Publishing Scheduler" />
           </CardContent>
