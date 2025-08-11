@@ -99,16 +99,7 @@ const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {items
-                .filter((item) => {
-                  // Hide items when module flags are disabled
-                  const path = item.url.replace('/dashboard/', '');
-                  switch (path) {
-                    case 'crm':
-                      return true; // filtered via flags in AppSidebar? handled below
-                    default:
-                      return true;
-                  }
-                })
+                .filter((item) => isItemEnabled(item.url))
                 .map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
