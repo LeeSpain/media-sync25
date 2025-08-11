@@ -1,8 +1,16 @@
+
 import SEO from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { useOverviewMetrics } from "@/hooks/useOverviewMetrics";
 
 const Overview = () => {
+  const { data, isLoading } = useOverviewMetrics();
+
+  const leads = isLoading ? "…" : String(data?.leadsThisWeek ?? 0);
+  const conv = isLoading ? "…" : `${(data?.conversionRate ?? 0).toFixed(1)}%`;
+  const activeCamp = isLoading ? "…" : String(data?.activeCampaigns ?? 0);
+  const engagement = isLoading ? "…" : String(data?.engagement7d ?? 0);
+
   return (
     <main>
       <SEO
@@ -15,19 +23,19 @@ const Overview = () => {
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader><CardTitle className="text-base">Leads this week</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-semibold">24</p></CardContent>
+          <CardContent><p className="text-2xl font-semibold">{leads}</p></CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-base">Conversion rate</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-semibold">3.2%</p></CardContent>
+          <CardContent><p className="text-2xl font-semibold">{conv}</p></CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-base">Active campaigns</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-semibold">5</p></CardContent>
+          <CardContent><p className="text-2xl font-semibold">{activeCamp}</p></CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Social engagement</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-semibold">+18%</p></CardContent>
+          <CardHeader><CardTitle className="text-base">Engagement events (7d)</CardTitle></CardHeader>
+          <CardContent><p className="text-2xl font-semibold">{engagement}</p></CardContent>
         </Card>
       </section>
 
@@ -36,22 +44,22 @@ const Overview = () => {
           <CardHeader><CardTitle className="text-base">Welcome</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              You gained 24 new leads this week and engagement is up 18% compared to last week.
+              Your dashboard reflects live data from your CRM, campaigns, and engagement. Create contacts, companies, and deals to get started.
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Active Campaigns</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            {["Spring Sale", "Referral Boost", "IG Growth"].map((c, i) => (
-              <div key={c}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{c}</span>
-                  <span className="text-muted-foreground">{(40 + i * 20)}%</span>
-                </div>
-                <Progress value={40 + i * 20} />
-              </div>
-            ))}
+          <CardHeader><CardTitle className="text-base">Campaigns</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            ) : (data?.activeCampaigns ?? 0) === 0 ? (
+              <p className="text-sm text-muted-foreground">No active campaigns yet.</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                You have {data?.activeCampaigns} active campaign{(data?.activeCampaigns ?? 0) === 1 ? "" : "s"}.
+              </p>
+            )}
           </CardContent>
         </Card>
       </section>

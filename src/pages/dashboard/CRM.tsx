@@ -1,10 +1,31 @@
+
 import SEO from "@/components/SEO";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ContactsList from "@/components/crm/ContactsList";
+import CompaniesList from "@/components/crm/CompaniesList";
+import DealsList from "@/components/crm/DealsList";
 
 const CRM = () => (
   <main>
     <SEO title="Media-Sync CRM & Sales" description="Track leads, pipeline, and activities." canonical={window.location.href} />
     <h1 className="text-2xl md:text-3xl font-bold mb-4">CRM & Sales</h1>
-    
+
+    <Tabs defaultValue="contacts" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="contacts">Contacts</TabsTrigger>
+        <TabsTrigger value="companies">Companies</TabsTrigger>
+        <TabsTrigger value="deals">Deals</TabsTrigger>
+      </TabsList>
+      <TabsContent value="contacts">
+        <ContactsList />
+      </TabsContent>
+      <TabsContent value="companies">
+        <CompaniesList />
+      </TabsContent>
+      <TabsContent value="deals">
+        <DealsList />
+      </TabsContent>
+    </Tabs>
   </main>
 );
 
