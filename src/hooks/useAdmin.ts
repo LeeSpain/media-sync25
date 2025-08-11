@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const ADMIN_EMAIL_ALLOWLIST = [
-  "leewkamen@hotmail.co.uk",
+  "leewakeman@hotmail.co.uk",
 ];
 
 export function useAdmin() {
