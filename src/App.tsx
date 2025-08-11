@@ -29,17 +29,15 @@ import AdminGate from "./components/auth/AdminGate";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  console.log("App component loaded");
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Sonner />
-      <Toaster />
-      <BrowserRouter>
-        <I18nProvider>
-          <Header />
-          <Routes>
-            <Route path="/" element={<Index />} />
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <Sonner />
+    <Toaster />
+    <BrowserRouter>
+      <I18nProvider>
+        <Header />
+        <Routes>
+          <Route path="/" element={<Index />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/onboarding" element={<Onboarding />} />
@@ -66,7 +64,6 @@ const App = () => {
       </I18nProvider>
     </BrowserRouter>
   </QueryClientProvider>
-  );
-};
+);
 
 export default App;
