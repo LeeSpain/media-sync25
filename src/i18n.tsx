@@ -120,6 +120,27 @@ const dict: Dict = {
   "admin.ai.saveLocal": { en: "Save locally (temporary)", es: "Guardar localmente (temporal)" },
   "admin.ai.healthCheck": { en: "Run Health Check", es: "Ejecutar comprobación" },
 
+  // Auth
+  "auth.login": { en: "Login", es: "Iniciar sesión" },
+  "auth.register": { en: "Register", es: "Registrarse" },
+  "auth.loginDescription": { en: "Sign in to access your dashboard, campaigns, and CRM.", es: "Inicia sesión para acceder a tu panel, campañas y CRM." },
+  "auth.registerDescription": { en: "Create your account to set up your business, campaigns, and CRM.", es: "Crea tu cuenta para configurar tu negocio, campañas y CRM." },
+  "auth.welcomeBack": { en: "Welcome back", es: "Bienvenido de nuevo" },
+  "auth.getStarted": { en: "Get started", es: "Comenzar" },
+  "auth.name": { en: "Name", es: "Nombre" },
+  "auth.email": { en: "Email", es: "Correo" },
+  "auth.password": { en: "Password", es: "Contraseña" },
+  // Buttons / actions
+  "auth.continueWithGoogle": { en: "Continue with Google", es: "Continuar con Google" },
+  "auth.createAccount": { en: "Create account", es: "Crear cuenta" },
+  "auth.noAccount": { en: "Don’t have an account?", es: "¿No tienes una cuenta?" },
+  "auth.haveAccount": { en: "Already have an account?", es: "¿Ya tienes una cuenta?" },
+  // Toasts / pending states
+  "auth.loginPending": { en: "Signing in…", es: "Iniciando sesión…" },
+  "auth.registerPending": { en: "Creating account…", es: "Creando cuenta…" },
+  "auth.googlePending": { en: "Opening Google sign-in…", es: "Abriendo acceso con Google…" },
+  "auth.connectSupabase": { en: "Please connect Supabase to enable authentication.", es: "Conecta Supabase para habilitar la autenticación." },
+
   "admin.save": { en: "Save settings", es: "Guardar ajustes" },
   "admin.export": { en: "Export JSON", es: "Exportar JSON" },
   "admin.delete": { en: "Delete data", es: "Eliminar datos" },
