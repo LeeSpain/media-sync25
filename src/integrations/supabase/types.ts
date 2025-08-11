@@ -325,6 +325,192 @@ export type Database = {
         }
         Relationships: []
       }
+      company_research: {
+        Row: {
+          brand_voice: Json
+          company_id: string
+          competitors: Json
+          content_pillars: Json
+          created_at: string
+          created_by: string
+          id: string
+          industry_trends: Json
+          insights: Json
+          raw_content: string | null
+          source_url: string | null
+          status: Database["public"]["Enums"]["research_status"]
+          updated_at: string
+        }
+        Insert: {
+          brand_voice?: Json
+          company_id: string
+          competitors?: Json
+          content_pillars?: Json
+          created_at?: string
+          created_by: string
+          id?: string
+          industry_trends?: Json
+          insights?: Json
+          raw_content?: string | null
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["research_status"]
+          updated_at?: string
+        }
+        Update: {
+          brand_voice?: Json
+          company_id?: string
+          competitors?: Json
+          content_pillars?: Json
+          created_at?: string
+          created_by?: string
+          id?: string
+          industry_trends?: Json
+          insights?: Json
+          raw_content?: string | null
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["research_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      connected_accounts: {
+        Row: {
+          access_token: string | null
+          account_id: string | null
+          account_name: string | null
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          metadata: Json
+          provider: string
+          refresh_token: string | null
+          scopes: string[]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          account_id?: string | null
+          account_name?: string | null
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json
+          provider: string
+          refresh_token?: string | null
+          scopes?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          account_id?: string | null
+          account_name?: string | null
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json
+          provider?: string
+          refresh_token?: string | null
+          scopes?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_items: {
+        Row: {
+          agent_id: string | null
+          campaign_id: string | null
+          channel: Database["public"]["Enums"]["distribution_channel"]
+          company_id: string
+          content: string | null
+          created_at: string
+          created_by: string
+          id: string
+          kind: Database["public"]["Enums"]["content_kind"]
+          metadata: Json
+          research_id: string | null
+          status: Database["public"]["Enums"]["content_status"]
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          campaign_id?: string | null
+          channel: Database["public"]["Enums"]["distribution_channel"]
+          company_id: string
+          content?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          kind: Database["public"]["Enums"]["content_kind"]
+          metadata?: Json
+          research_id?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          campaign_id?: string | null
+          channel?: Database["public"]["Enums"]["distribution_channel"]
+          company_id?: string
+          content?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["content_kind"]
+          metadata?: Json
+          research_id?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_schedule: {
+        Row: {
+          channel: Database["public"]["Enums"]["distribution_channel"]
+          connected_account_id: string | null
+          content_id: string
+          created_at: string
+          created_by: string
+          id: string
+          publish_result: Json
+          scheduled_for: string
+          status: Database["public"]["Enums"]["schedule_status"]
+          updated_at: string
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["distribution_channel"]
+          connected_account_id?: string | null
+          content_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          publish_result?: Json
+          scheduled_for: string
+          status?: Database["public"]["Enums"]["schedule_status"]
+          updated_at?: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["distribution_channel"]
+          connected_account_id?: string | null
+          content_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          publish_result?: Json
+          scheduled_for?: string
+          status?: Database["public"]["Enums"]["schedule_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_activities: {
         Row: {
           completed_at: string | null
@@ -869,6 +1055,30 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          created_at: string
+          created_by: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -890,6 +1100,42 @@ export type Database = {
           display_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      publish_jobs: {
+        Row: {
+          content_id: string | null
+          created_at: string
+          created_by: string
+          error: string | null
+          id: string
+          provider: string | null
+          response: Json
+          schedule_id: string | null
+          status: string
+        }
+        Insert: {
+          content_id?: string | null
+          created_at?: string
+          created_by: string
+          error?: string | null
+          id?: string
+          provider?: string | null
+          response?: Json
+          schedule_id?: string | null
+          status?: string
+        }
+        Update: {
+          content_id?: string | null
+          created_at?: string
+          created_by?: string
+          error?: string | null
+          id?: string
+          provider?: string | null
+          response?: Json
+          schedule_id?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -940,7 +1186,23 @@ export type Database = {
         | "other"
       app_role: "admin" | "user"
       campaign_status: "draft" | "active" | "paused" | "completed"
+      content_kind:
+        | "social_post"
+        | "email"
+        | "sms"
+        | "whatsapp"
+        | "youtube_script"
+        | "youtube_video"
+      content_status:
+        | "draft"
+        | "generated"
+        | "approved"
+        | "scheduled"
+        | "published"
+        | "failed"
+        | "archived"
       deal_status: "open" | "won" | "lost"
+      distribution_channel: "social" | "email" | "sms" | "whatsapp" | "youtube"
       engagement_channel:
         | "email"
         | "whatsapp"
@@ -961,6 +1223,14 @@ export type Database = {
         | "comment"
         | "like"
         | "share"
+      research_status: "pending" | "in_progress" | "completed" | "failed"
+      schedule_status:
+        | "scheduled"
+        | "queued"
+        | "running"
+        | "published"
+        | "failed"
+        | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1101,7 +1371,25 @@ export const Constants = {
       ],
       app_role: ["admin", "user"],
       campaign_status: ["draft", "active", "paused", "completed"],
+      content_kind: [
+        "social_post",
+        "email",
+        "sms",
+        "whatsapp",
+        "youtube_script",
+        "youtube_video",
+      ],
+      content_status: [
+        "draft",
+        "generated",
+        "approved",
+        "scheduled",
+        "published",
+        "failed",
+        "archived",
+      ],
       deal_status: ["open", "won", "lost"],
+      distribution_channel: ["social", "email", "sms", "whatsapp", "youtube"],
       engagement_channel: [
         "email",
         "whatsapp",
@@ -1123,6 +1411,15 @@ export const Constants = {
         "comment",
         "like",
         "share",
+      ],
+      research_status: ["pending", "in_progress", "completed", "failed"],
+      schedule_status: [
+        "scheduled",
+        "queued",
+        "running",
+        "published",
+        "failed",
+        "canceled",
       ],
     },
   },
