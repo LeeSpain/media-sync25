@@ -2,6 +2,7 @@
 import SEO from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOverviewMetrics } from "@/hooks/useOverviewMetrics";
+import { PersonalProfileSection } from "@/components/dashboard/PersonalProfileSection";
 
 const Overview = () => {
   const { data, isLoading } = useOverviewMetrics();
@@ -39,7 +40,8 @@ const Overview = () => {
         </Card>
       </section>
 
-      <section className="mt-6 grid gap-4 lg:grid-cols-2">
+      <section className="mt-6 grid gap-4 lg:grid-cols-3">
+        <PersonalProfileSection />
         <Card>
           <CardHeader><CardTitle className="text-base">Welcome</CardTitle></CardHeader>
           <CardContent>
