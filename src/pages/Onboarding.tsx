@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import SEO from "@/components/SEO";
 import { useI18n } from "@/i18n";
+import { supabase } from "@/integrations/supabase/client";
 
 export type OnboardingData = {
   name: string;
@@ -63,6 +64,8 @@ const Onboarding = () => {
     competitors: ["", "", ""],
   });
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const canNext = useMemo(() => {
     if (step === "basic") return data.name && data.description && data.industry;
     return true;
@@ -71,12 +74,31 @@ const Onboarding = () => {
   const next = () => setStep(steps[Math.min(steps.indexOf(step) + 1, steps.length - 1)]);
   const back = () => setStep(steps[Math.max(steps.indexOf(step) - 1, 0)]);
 
-  const finish = () => {
-    localStorage.setItem("onboardingData", JSON.stringify(data));
-    toast.success("Onboarding saved. Connect integrations next.");
-    navigate("/dashboard");
-  };
+  const finish = async () => {
+    try {
+      setIsSaving(true);
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth?.user;
 
+      if (user) {
+        const { error } = await supabase
+          .from("onboarding")
+          .upsert({ user_id: user.id, data }, { onConflict: "user_id" });
+        if (error) throw error;
+        toast.success("Onboarding saved to your account.");
+      } else {
+        localStorage.setItem("onboardingData", JSON.stringify(data));
+        toast.info("Saved locally. Create an account to sync.");
+      }
+
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save onboarding. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
   const onLogoChange = (file?: File) => {
     if (!file) return setData({ ...data, logo: undefined });
     const reader = new FileReader();
@@ -308,7 +330,7 @@ const Onboarding = () => {
               ) : (
                 <div className="flex gap-2">
                   <Button variant="secondary" onClick={() => toast.info("AI plan generation will be available after Supabase integration.")}>{t("action.generate")}</Button>
-                  <Button variant="hero" onClick={finish}>{t("action.finish")}</Button>
+                  <Button variant="hero" onClick={finish} disabled={isSaving}>{t("action.finish")}</Button>
                 </div>
               )}
             </div>
