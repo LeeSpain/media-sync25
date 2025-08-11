@@ -5,7 +5,7 @@ export type Lang = "en" | "es";
 type Dict = Record<string, Record<Lang, string>>;
 
 const dict: Dict = {
-  "app.name": { en: "Lovable AI Sales & Marketing", es: "Lovable AI Ventas y Marketing" },
+  "app.name": { en: "Media-Sync", es: "Media-Sync" },
   "nav.onboarding": { en: "Onboarding", es: "Inicio" },
   "nav.dashboard": { en: "Dashboard", es: "Panel" },
   "nav.getStarted": { en: "Get Started", es: "Comenzar" },
