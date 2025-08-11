@@ -47,6 +47,8 @@ export default function OnboardingSummary() {
         ) : (
           <>
             <dl className="grid gap-2 sm:grid-cols-2">
+              <div><dt className="text-xs text-muted-foreground">Owner</dt><dd className="font-medium">{[row.personalFirstName, row.personalLastName].filter(Boolean).join(" ") || "—"}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Owner Email</dt><dd className="font-medium">{row.personalEmail || "—"}</dd></div>
               <div><dt className="text-xs text-muted-foreground">Business</dt><dd className="font-medium">{row.name || "—"}</dd></div>
               <div><dt className="text-xs text-muted-foreground">Industry</dt><dd className="font-medium">{row.industry || "—"}</dd></div>
               <div><dt className="text-xs text-muted-foreground">Website</dt><dd className="font-medium">{row.website || "—"}</dd></div>
