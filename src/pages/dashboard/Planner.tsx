@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import SEO from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,17 +6,78 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import EmptyState from "@/components/EmptyState";
+import { supabase } from "@/integrations/supabase/client";
+import CreateCampaignDialog, { Campaign } from "@/components/planner/CreateCampaignDialog";
+import { toast } from "@/hooks/use-toast";
 
 const Planner = () => {
-  // Placeholder local state until campaigns exist in DB
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [range, setRange] = useState<string>("week");
-  const campaigns: Array<{ id: string; name: string; status: string; start: string; channel: string }>= [];
+  const [openCreate, setOpenCreate] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = useMemo(() =>
-    campaigns.filter(c => (status === "all" || c.status === status) && (!q || c.name.toLowerCase().includes(q.toLowerCase()))),
-  [campaigns, q, status]);
+  useEffect(() => {
+    let isMounted = true;
+    const load = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("campaigns")
+          .select("id,name,description,status,start_at,end_at,created_at")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        if (isMounted) setCampaigns((data ?? []) as Campaign[]);
+      } catch (err: any) {
+        console.error(err);
+        toast({ title: "Failed to load campaigns", description: err.message ?? "Unexpected error" });
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const withinRange = (iso?: string | null) => {
+    if (!iso) return true;
+    const date = new Date(iso);
+    const now = new Date();
+    if (range === "week") {
+      const weekAhead = new Date();
+      weekAhead.setDate(now.getDate() + 7);
+      return date <= weekAhead;
+    }
+    if (range === "month") {
+      const monthAhead = new Date();
+      monthAhead.setMonth(now.getMonth() + 1);
+      return date <= monthAhead;
+    }
+    if (range === "quarter") {
+      const qAhead = new Date();
+      qAhead.setMonth(now.getMonth() + 3);
+      return date <= qAhead;
+    }
+    return true;
+  };
+
+  const filtered = useMemo(
+    () =>
+      campaigns.filter(
+        (c) =>
+          (status === "all" || c.status === status) &&
+          (!q || c.name.toLowerCase().includes(q.toLowerCase())) &&
+          withinRange(c.start_at)
+      ),
+    [campaigns, q, status, range]
+  );
+
+  const handleCreated = (c: Campaign) => {
+    setCampaigns((prev) => [c, ...prev]);
+  };
 
   return (
     <main className="container py-6 space-y-6">
@@ -29,8 +90,8 @@ const Planner = () => {
         </div>
         <div className="flex gap-2">
           <Link to="/dashboard/calendar"><Button variant="outline">Calendar</Button></Link>
-          <Button variant="secondary">Import Schedule</Button>
-          <Button>Create Campaign</Button>
+          <Button variant="secondary" onClick={() => toast({ title: "Import coming soon" })}>Import Schedule</Button>
+          <Button onClick={() => setOpenCreate(true)}>Create Campaign</Button>
         </div>
       </header>
 
@@ -46,9 +107,9 @@ const Planner = () => {
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="scheduled">Scheduled</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="paused">Paused</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -65,7 +126,12 @@ const Planner = () => {
         </div>
       </section>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <Card>
+          <CardHeader><CardTitle>Loading campaigns…</CardTitle></CardHeader>
+          <CardContent className="text-muted-foreground text-sm">Please wait</CardContent>
+        </Card>
+      ) : filtered.length === 0 ? (
         <EmptyState
           title="Plan your first campaign"
           description="Create a campaign or import a schedule. You can also set up your CRM first for better targeting."
@@ -108,7 +174,10 @@ const Planner = () => {
                       <span className="font-medium">{c.name}</span>
                       <span className="text-xs text-muted-foreground">{c.status}</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">{c.channel} • {new Date(c.start).toLocaleString()}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {c.start_at ? new Date(c.start_at).toLocaleString() : "No start date"}
+                      {c.end_at ? ` – ${new Date(c.end_at).toLocaleString()}` : ""}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -116,6 +185,8 @@ const Planner = () => {
           </Card>
         </section>
       )}
+
+      <CreateCampaignDialog open={openCreate} onOpenChange={setOpenCreate} onCreated={handleCreated} />
     </main>
   );
 };
