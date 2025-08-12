@@ -32,7 +32,10 @@ const Register = () => {
     const name = String(fd.get("name") || "");
     const email = String(fd.get("email") || "");
     const password = String(fd.get("password") || "");
+    const companyName = String(fd.get("company_name") || "");
+    const companyWebsite = String(fd.get("company_website") || "");
     const redirectUrl = `${window.location.origin}/`;
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -41,15 +44,55 @@ const Register = () => {
         data: { name },
       },
     });
+
     if (error) {
       toast({ title: "Registration failed", description: error.message, variant: "destructive" });
-    } else {
-      if (data.session) {
+      return;
+    }
+
+    // If user is logged in immediately (no email confirmation required)
+    if (data.session) {
+      const userId = data.session.user.id;
+      try {
+        // Save display name
+        await supabase.from("profiles").update({ display_name: name }).eq("id", userId);
+
+        // Create or reuse company
+        if (companyName || companyWebsite) {
+          const { data: existing } = await supabase
+            .from("crm_companies")
+            .select("id")
+            .eq("created_by", userId)
+            .or(
+              [
+                companyWebsite ? `website.eq.${companyWebsite}` : undefined,
+                companyName ? `name.eq.${companyName}` : undefined,
+              ].filter(Boolean).join(",")
+            )
+            .limit(1);
+
+          if (!existing || existing.length === 0) {
+            await supabase.from("crm_companies").insert({
+              name: companyName || companyWebsite || "My Company",
+              website: companyWebsite || null,
+              created_by: userId,
+            });
+          }
+        }
+
         toast({ title: "Account created", description: "Redirecting to dashboard..." });
+      } catch (e: any) {
+        console.error("Post-signup setup error", e);
+      } finally {
         navigate("/dashboard", { replace: true });
-      } else {
-        toast({ title: "Check your email", description: "Confirm your email to finish registration." });
       }
+    } else {
+      // Store for later creation after email confirmation
+      localStorage.setItem(
+        "pending_registration_company",
+        JSON.stringify({ name, companyName, companyWebsite })
+      );
+      toast({ title: "Check your email", description: "Confirm your email to finish registration." });
     }
   };
 
@@ -97,6 +140,16 @@ const Register = () => {
               <div className="space-y-2">
                 <Label htmlFor="password">{t("auth.password") || "Password"}</Label>
                 <Input id="password" name="password" type="password" required placeholder="••••••••" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="company_name">Company name</Label>
+                  <Input id="company_name" name="company_name" type="text" placeholder="Acme Inc." />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company_website">Company website</Label>
+                  <Input id="company_website" name="company_website" type="url" placeholder="https://acme.com" />
+                </div>
               </div>
               <Button type="submit" className="w-full">
                 {t("auth.createAccount") || "Create account"}

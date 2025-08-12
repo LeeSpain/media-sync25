@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "./AppSidebar";
 import DashboardTopBar from "./DashboardTopBar";
+import BusinessOnboardingModal from "@/components/onboarding/BusinessOnboardingModal";
 
 
 const DashboardLayout = () => {
@@ -18,6 +19,7 @@ const DashboardLayout = () => {
           </div>
         </div>
       </div>
+      <BusinessOnboardingModal />
     </SidebarProvider>
   );
 };

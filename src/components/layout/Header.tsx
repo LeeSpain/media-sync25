@@ -18,7 +18,7 @@ const Header = () => {
           </Link>
           <div className="ml-2 flex items-center gap-1">
             <Button variant="outline" size="sm" aria-label="Switch language" onClick={() => setLang(lang === "en" ? "es" : "en")}> {lang.toUpperCase()} </Button>
-            <Link to="/onboarding">
+            <Link to="/register">
               <Button variant="hero" size="sm">{t("nav.getStarted")}</Button>
             </Link>
           </div>
