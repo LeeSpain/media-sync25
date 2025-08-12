@@ -967,6 +967,277 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaign_variants: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          html: string | null
+          id: string
+          percentage: number
+          subject: string | null
+          text: string | null
+          updated_at: string
+          variant_key: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          html?: string | null
+          id?: string
+          percentage?: number
+          subject?: string | null
+          text?: string | null
+          updated_at?: string
+          variant_key: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          html?: string | null
+          id?: string
+          percentage?: number
+          subject?: string | null
+          text?: string | null
+          updated_at?: string
+          variant_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_variants_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaigns: {
+        Row: {
+          audience_filter: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          html: string
+          id: string
+          name: string
+          provider: string | null
+          scheduled_for: string | null
+          statistics: Json
+          status: Database["public"]["Enums"]["email_campaign_status"]
+          subject: string
+          template_id: string | null
+          text: string | null
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          audience_filter?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          html: string
+          id?: string
+          name: string
+          provider?: string | null
+          scheduled_for?: string | null
+          statistics?: Json
+          status?: Database["public"]["Enums"]["email_campaign_status"]
+          subject: string
+          template_id?: string | null
+          text?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audience_filter?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          html?: string
+          id?: string
+          name?: string
+          provider?: string | null
+          scheduled_for?: string | null
+          statistics?: Json
+          status?: Database["public"]["Enums"]["email_campaign_status"]
+          subject?: string
+          template_id?: string | null
+          text?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_template_fk"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_events: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          created_by: string
+          event_type: Database["public"]["Enums"]["email_event_type"]
+          id: string
+          occurred_at: string
+          payload: Json
+          provider: string | null
+          recipient_id: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          created_by: string
+          event_type: Database["public"]["Enums"]["email_event_type"]
+          id?: string
+          occurred_at?: string
+          payload?: Json
+          provider?: string | null
+          recipient_id?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          created_by?: string
+          event_type?: Database["public"]["Enums"]["email_event_type"]
+          id?: string
+          occurred_at?: string
+          payload?: Json
+          provider?: string | null
+          recipient_id?: string | null
+        }
+        Relationships: []
+      }
+      email_recipients: {
+        Row: {
+          campaign_id: string
+          contact_id: string | null
+          created_at: string
+          email_address: string
+          error: string | null
+          event_counts: Json
+          id: string
+          last_event_at: string | null
+          message_id: string | null
+          status: Database["public"]["Enums"]["email_recipient_status"]
+          unsubscribe_token: string
+          updated_at: string
+          variant_key: string | null
+        }
+        Insert: {
+          campaign_id: string
+          contact_id?: string | null
+          created_at?: string
+          email_address: string
+          error?: string | null
+          event_counts?: Json
+          id?: string
+          last_event_at?: string | null
+          message_id?: string | null
+          status?: Database["public"]["Enums"]["email_recipient_status"]
+          unsubscribe_token?: string
+          updated_at?: string
+          variant_key?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          contact_id?: string | null
+          created_at?: string
+          email_address?: string
+          error?: string | null
+          event_counts?: Json
+          id?: string
+          last_event_at?: string | null
+          message_id?: string | null
+          status?: Database["public"]["Enums"]["email_recipient_status"]
+          unsubscribe_token?: string
+          updated_at?: string
+          variant_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_recipients_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_suppressions: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string
+          id: string
+          reason: string | null
+          source: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email: string
+          id?: string
+          reason?: string | null
+          source?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string
+          id?: string
+          reason?: string | null
+          source?: string | null
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          created_at: string
+          created_by: string
+          html: string
+          id: string
+          metadata: Json
+          name: string
+          subject: string
+          text: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          html: string
+          id?: string
+          metadata?: Json
+          name: string
+          subject: string
+          text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          html?: string
+          id?: string
+          metadata?: Json
+          name?: string
+          subject?: string
+          text?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       engagement_events: {
         Row: {
           campaign_id: string | null
@@ -1313,6 +1584,32 @@ export type Database = {
         | "archived"
       deal_status: "open" | "won" | "lost"
       distribution_channel: "social" | "email" | "sms" | "whatsapp" | "youtube"
+      email_campaign_status:
+        | "draft"
+        | "scheduled"
+        | "sending"
+        | "sent"
+        | "paused"
+        | "canceled"
+      email_event_type:
+        | "delivered"
+        | "open"
+        | "click"
+        | "bounce"
+        | "complaint"
+        | "unsubscribe"
+        | "spamreport"
+        | "reject"
+      email_recipient_status:
+        | "queued"
+        | "sending"
+        | "delivered"
+        | "opened"
+        | "clicked"
+        | "bounced"
+        | "complained"
+        | "unsubscribed"
+        | "failed"
       engagement_channel:
         | "email"
         | "whatsapp"
@@ -1514,6 +1811,35 @@ export const Constants = {
       ],
       deal_status: ["open", "won", "lost"],
       distribution_channel: ["social", "email", "sms", "whatsapp", "youtube"],
+      email_campaign_status: [
+        "draft",
+        "scheduled",
+        "sending",
+        "sent",
+        "paused",
+        "canceled",
+      ],
+      email_event_type: [
+        "delivered",
+        "open",
+        "click",
+        "bounce",
+        "complaint",
+        "unsubscribe",
+        "spamreport",
+        "reject",
+      ],
+      email_recipient_status: [
+        "queued",
+        "sending",
+        "delivered",
+        "opened",
+        "clicked",
+        "bounced",
+        "complained",
+        "unsubscribed",
+        "failed",
+      ],
       engagement_channel: [
         "email",
         "whatsapp",
