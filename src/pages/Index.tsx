@@ -33,7 +33,7 @@ const Index = () => {
               {t("hero.subtitle")}
             </p>
             <div className="flex items-center justify-center gap-3">
-              <a href="/onboarding"><Button variant="hero" size="lg">{t("hero.cta")}</Button></a>
+              <a href="/register"><Button variant="hero" size="lg">{t("hero.cta")}</Button></a>
               <a href="#how-it-works"><Button variant="outline" size="lg">{t("hero.secondary")}</Button></a>
             </div>
           </div>
