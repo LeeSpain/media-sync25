@@ -138,7 +138,7 @@ export const BusinessOnboardingModal = () => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? setOpen(true) : closeForSession())}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Business Onboarding</DialogTitle>
           <DialogDescription>
@@ -146,35 +146,37 @@ export const BusinessOnboardingModal = () => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="brandTone">Brand tone/voice</Label>
-            <Input id="brandTone" value={brandTone} onChange={(e) => setBrandTone(e.target.value)} placeholder="e.g. Professional, friendly, witty" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="audience">Primary audience</Label>
-            <Textarea id="audience" value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="Who do you sell to? Key pain points?" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="goal">Main business goal</Label>
-            <Input id="goal" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="e.g. Generate 50 qualified leads/month" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="competitors">Competitors (comma-separated)</Label>
-            <Input id="competitors" value={competitors} onChange={(e) => setCompetitors(e.target.value)} placeholder="competitor1.com, competitor2.com" />
-          </div>
-          <Card className="p-3">
-            <div className="grid gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="twitter">Twitter / X</Label>
-                <Input id="twitter" value={twitter} onChange={(e) => setTwitter(e.target.value)} placeholder="https://x.com/yourhandle" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="linkedin">LinkedIn</Label>
-                <Input id="linkedin" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="https://linkedin.com/company/yourcompany" />
-              </div>
+        <div className="overflow-y-auto max-h-[60vh] pr-1 -mr-1">
+          <div className="grid gap-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="brandTone">Brand tone/voice</Label>
+              <Input id="brandTone" value={brandTone} onChange={(e) => setBrandTone(e.target.value)} placeholder="e.g. Professional, friendly, witty" />
             </div>
-          </Card>
+            <div className="space-y-2">
+              <Label htmlFor="audience">Primary audience</Label>
+              <Textarea id="audience" value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="Who do you sell to? Key pain points?" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="goal">Main business goal</Label>
+              <Input id="goal" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="e.g. Generate 50 qualified leads/month" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="competitors">Competitors (comma-separated)</Label>
+              <Input id="competitors" value={competitors} onChange={(e) => setCompetitors(e.target.value)} placeholder="competitor1.com, competitor2.com" />
+            </div>
+            <Card className="p-3">
+              <div className="grid gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="twitter">Twitter / X</Label>
+                  <Input id="twitter" value={twitter} onChange={(e) => setTwitter(e.target.value)} placeholder="https://x.com/yourhandle" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="linkedin">LinkedIn</Label>
+                  <Input id="linkedin" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="https://linkedin.com/company/yourcompany" />
+                </div>
+              </div>
+            </Card>
+          </div>
         </div>
 
         <DialogFooter>
