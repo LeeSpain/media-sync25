@@ -61,6 +61,33 @@ import { PlugZap, Building2, UploadCloud, DatabaseZap, Cable, Workflow } from "l
     return map;
   }, [data]);
 
+  const { data: counts } = useQuery({
+    queryKey: ["crm_counts"],
+    queryFn: async () => {
+      const [contacts, companies, deals] = await Promise.all([
+        supabase.from("crm_contacts").select("id", { count: "exact", head: true }),
+        supabase.from("crm_companies").select("id", { count: "exact", head: true }),
+        supabase.from("crm_deals").select("id", { count: "exact", head: true }),
+      ]);
+      return {
+        contacts: contacts.count || 0,
+        companies: companies.count || 0,
+        deals: deals.count || 0,
+      };
+    },
+  });
+
+  useEffect(() => {
+    if (!openKey) {
+      setAccountName("");
+      setToken("");
+      return;
+    }
+    const existing = byProvider[openKey];
+    setAccountName(existing?.account_name || providers.find(pr => pr.key === openKey)?.name || "");
+    setToken("");
+  }, [openKey, byProvider]);
+
   const connectMutation = useMutation({
     mutationFn: async (provider: ProviderKey) => {
       const { data: ures, error: aerr } = await supabase.auth.getUser();
@@ -73,6 +100,7 @@ import { PlugZap, Building2, UploadCloud, DatabaseZap, Cable, Workflow } from "l
         account_name: accountName || provider,
         status: "connected",
         scopes: [],
+        access_token: token || null,
         metadata: token ? { tokenSaved: true, tokenType: "api" } : {},
         created_by: uid,
       };
@@ -88,6 +116,45 @@ import { PlugZap, Building2, UploadCloud, DatabaseZap, Cable, Workflow } from "l
       qc.invalidateQueries({ queryKey: ["connected_accounts", "crm"] });
     },
     onError: (e: any) => toast({ title: "Connection failed", description: e?.message ?? "Please try again.", variant: "destructive" }),
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async ({ provider, id }: { provider: ProviderKey; id: string }) => {
+      const updates: any = { account_name: accountName };
+      if (token) {
+        updates.access_token = token;
+        updates.metadata = { tokenSaved: true, tokenType: "api" };
+      }
+      const { error } = await supabase.from("connected_accounts").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Saved", description: "Integration updated." });
+      setOpenKey(null);
+      qc.invalidateQueries({ queryKey: ["connected_accounts", "crm"] });
+    },
+    onError: (e: any) => toast({ title: "Save failed", description: e?.message ?? "Please try again.", variant: "destructive" }),
+  });
+
+  const disconnectMutation = useMutation({
+    mutationFn: async (provider: ProviderKey) => {
+      const { data: ures, error: aerr } = await supabase.auth.getUser();
+      if (aerr) throw aerr;
+      const uid = ures.user?.id;
+      if (!uid) throw new Error("Not authenticated");
+      const { error } = await supabase
+        .from("connected_accounts")
+        .delete()
+        .eq("provider", provider)
+        .eq("created_by", uid);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Disconnected", description: "Integration removed." });
+      setOpenKey(null);
+      qc.invalidateQueries({ queryKey: ["connected_accounts", "crm"] });
+    },
+    onError: (e: any) => toast({ title: "Disconnect failed", description: e?.message ?? "Please try again.", variant: "destructive" }),
   });
 
   const handleCSVUpload = async (file: File) => {
@@ -163,10 +230,26 @@ import { PlugZap, Building2, UploadCloud, DatabaseZap, Cable, Workflow } from "l
                             {!p.requiresToken && (
                               <p className="text-xs text-muted-foreground">OAuth connection coming soon. For now, you can mark as connected to track the link, or use Zapier.</p>
                             )}
+
+                            <div className="rounded-md border p-3">
+                              <p className="text-sm font-medium">Sync preview</p>
+                              <p className="text-xs text-muted-foreground">Objects to sync: Contacts, Companies, Deals.</p>
+                              <div className="mt-2 grid grid-cols-3 gap-2 text-sm">
+                                <div>Contacts: <span className="font-medium">{counts?.contacts ?? 0}</span></div>
+                                <div>Companies: <span className="font-medium">{counts?.companies ?? 0}</span></div>
+                                <div>Deals: <span className="font-medium">{counts?.deals ?? 0}</span></div>
+                              </div>
+                              <div className="mt-2">
+                                <Button variant="outline" size="sm" onClick={() => toast({ title: "Sync preview", description: "External fetch preview coming soon. This will show additions, updates, and conflicts." })}>Generate preview</Button>
+                              </div>
+                            </div>
                           </div>
                           <DialogFooter>
+                            {connected && (
+                              <Button variant="destructive" onClick={() => disconnectMutation.mutate(p.key)} disabled={disconnectMutation.isPending}>Disconnect</Button>
+                            )}
                             <Button variant="outline" onClick={() => setOpenKey(null)}>Cancel</Button>
-                            <Button onClick={() => connectMutation.mutate(p.key)} disabled={connectMutation.isPending}>
+                            <Button onClick={() => connected ? saveMutation.mutate({ provider: p.key, id: byProvider[p.key]!.id }) : connectMutation.mutate(p.key)} disabled={connectMutation.isPending || saveMutation.isPending}>
                               {connected ? "Save" : "Connect"}
                             </Button>
                           </DialogFooter>
