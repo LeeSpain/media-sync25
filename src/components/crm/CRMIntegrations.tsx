@@ -170,27 +170,25 @@ import { PlugZap, Building2, UploadCloud, DatabaseZap, Cable, Workflow } from "l
           <CardDescription>Link popular CRMs or import via CSV. Manage connections anytime.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
             {providers.map((p) => {
               const connected = !!byProvider[p.key];
               const Icon = p.icon;
               return (
-                <Card key={p.key} className="h-full">
+                <Card key={p.key} className="h-full overflow-hidden">
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         <Icon className={`h-5 w-5 ${p.color}`} />
-                        <CardTitle className="text-base">{p.name}</CardTitle>
+                        <CardTitle className="text-base truncate">{p.name}</CardTitle>
                       </div>
-                      {connected ? (
-                        <Badge variant="secondary">Connected</Badge>
-                      ) : (
-                        <Badge variant="outline">Not connected</Badge>
-                      )}
+                      <Badge className="shrink-0" variant={connected ? "secondary" : "outline"}>
+                        {connected ? "Connected" : "Not connected"}
+                      </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground">{p.description}</p>
+                    <p className="text-sm text-muted-foreground whitespace-normal break-words leading-relaxed">{p.description}</p>
 
                     {p.key === "csv" ? (
                       <div className="space-y-3">
