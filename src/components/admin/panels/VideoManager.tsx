@@ -107,6 +107,15 @@ export default function VideoManager({ companyData }: { companyData?: CompanyDat
     setVideoCreationStep(0);
 
     try {
+      // Ensure authenticated session and pass Authorization header
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast({ title: 'Please sign in again', description: 'Your session appears to have expired.', variant: 'destructive' });
+        setIsCreatingVideo(false);
+        return;
+      }
+      const authHeaders = { Authorization: `Bearer ${session.access_token}` };
+
       // 1) Generate script via Edge Function
       const { data: created, error: createErr } = await supabase.functions.invoke('video-create', {
         body: {
@@ -114,6 +123,7 @@ export default function VideoManager({ companyData }: { companyData?: CompanyDat
           type: videoType,
           style: options?.style ?? 'professional',
         },
+        headers: authHeaders,
       });
       if (createErr) throw createErr;
 
@@ -126,9 +136,11 @@ export default function VideoManager({ companyData }: { companyData?: CompanyDat
       // 2) Scenes + TTS in parallel
       const scenesPromise = supabase.functions.invoke('scenes-generate', {
         body: { videoId, width: 1280, height: 720, model: 'runware:100@1' },
+        headers: authHeaders,
       });
       const ttsPromise = supabase.functions.invoke('tts-elevenlabs', {
         body: { videoId, voiceId: options?.voiceId, modelId: 'eleven_multilingual_v2' },
+        headers: authHeaders,
       });
 
       const [{ data: scenesData, error: scenesErr }, { data: ttsData, error: ttsErr }] = await Promise.all([scenesPromise, ttsPromise]);
@@ -202,7 +214,12 @@ export default function VideoManager({ companyData }: { companyData?: CompanyDat
       setVideoCreationStep(0);
     } catch (e: any) {
       console.error('Video pipeline failed', e);
-      toast({ title: 'Video creation failed', description: e?.message || 'Please try again.' });
+      const isUnauthorized = (e?.status === 401) || /401|Unauthorized|JWT/i.test(e?.message || '');
+      toast({
+        title: isUnauthorized ? 'Session expired' : 'Video creation failed',
+        description: isUnauthorized ? 'Please sign in again.' : (e?.message || 'Please try again.'),
+        variant: 'destructive',
+      });
       setIsCreatingVideo(false);
       // keep modal open for retry
     }
