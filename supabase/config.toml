@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.video-create]
 verify_jwt = true
+
+[functions.send-email-campaign]
+verify_jwt = true
+
+[functions.email-process-scheduled]
+verify_jwt = false

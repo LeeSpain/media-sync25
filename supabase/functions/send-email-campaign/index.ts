@@ -70,6 +70,7 @@ serve(async (req: Request) => {
     let subject = payload.subject || "";
     let html = payload.html || "";
     const text = payload.text || null;
+    let fromAddress = (payload.from?.trim()) || "onboarding@resend.dev";
 
     if (!campaignId) {
       const status = isScheduled ? "scheduled" : "sending";
@@ -87,6 +88,7 @@ serve(async (req: Request) => {
           audience_filter: { type: payload.audience || "all" },
           statistics: {},
           created_by: userId,
+          from_address: fromAddress,
         })
         .select("id")
         .maybeSingle();
@@ -100,7 +102,7 @@ serve(async (req: Request) => {
       // Ensure ownership and get essentials
       const { data: existing, error: loadErr } = await supabase
         .from("email_campaigns")
-        .select("id, subject, html, text, status, created_by")
+        .select("id, subject, html, text, status, created_by, from_address")
         .eq("id", campaignId)
         .maybeSingle();
       if (loadErr) throw loadErr;
@@ -112,71 +114,75 @@ serve(async (req: Request) => {
       }
       subject = existing.subject;
       html = existing.html;
+      fromAddress = (existing as any).from_address || fromAddress;
     }
 
-    // Build audience (currently: all contacts with email, owned by user)
-    const { data: contacts, error: contactErr } = await supabase
-      .from("crm_contacts")
-      .select("id, email")
-      .eq("created_by", userId)
-      .not("email", "is", null);
-    if (contactErr) throw contactErr;
+    // When creating a new campaign, build audience and (optionally) insert recipients
+    if (!campaignId) {
+      // Build audience (currently: all contacts with email, owned by user)
+      const { data: contacts, error: contactErr } = await supabase
+        .from("crm_contacts")
+        .select("id, email")
+        .eq("created_by", userId)
+        .not("email", "is", null);
+      if (contactErr) throw contactErr;
 
-    const contactEmails = (contacts || [])
-      .map((c: any) => ({ id: c.id as string, email: String(c.email) }))
-      .filter((c) => !!c.email);
+      const contactEmails = (contacts || [])
+        .map((c: any) => ({ id: c.id as string, email: String(c.email) }))
+        .filter((c) => !!c.email);
 
-    // Load user suppressions and filter them out
-    const { data: suppressions, error: supErr } = await supabase
-      .from("email_suppressions")
-      .select("email")
-      .eq("created_by", userId);
-    if (supErr) throw supErr;
+      // Load user suppressions and filter them out
+      const { data: suppressions, error: supErr } = await supabase
+        .from("email_suppressions")
+        .select("email")
+        .eq("created_by", userId);
+      if (supErr) throw supErr;
 
-    const suppressed = new Set((suppressions || []).map((s: any) => String(s.email).toLowerCase()));
-    const recipients = contactEmails.filter((c) => !suppressed.has(c.email.toLowerCase()));
+      const suppressed = new Set((suppressions || []).map((s: any) => String(s.email).toLowerCase()));
+      const recipients = contactEmails.filter((c) => !suppressed.has(c.email.toLowerCase()));
 
-    if (recipients.length === 0) {
-      // If no recipients, mark campaign as sent if it was immediate, or leave scheduled
-      if (!isScheduled) {
+      if (recipients.length === 0) {
+        // If no recipients, mark campaign as sent if it was immediate, or leave scheduled
+        if (!isScheduled) {
+          await supabase
+            .from("email_campaigns")
+            .update({ status: "sent", statistics: { sent: 0, failed: 0, total: 0 } })
+            .eq("id", campaignId);
+        }
+        return new Response(
+          JSON.stringify({ campaign_id: campaignId, message: "No eligible recipients." }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      // Insert recipient rows (status defaults to queued)
+      const toInsert = recipients.map((r) => ({
+        campaign_id: campaignId,
+        email_address: r.email,
+        contact_id: r.id,
+        status: isScheduled ? "queued" : "processing",
+      }));
+
+      const { error: recErr } = await supabase.from("email_recipients").insert(toInsert);
+      if (recErr) throw recErr;
+
+      if (isScheduled) {
+        // Leave for scheduler to process later
         await supabase
           .from("email_campaigns")
-          .update({ status: "sent", statistics: { sent: 0, failed: 0, total: 0 } })
+          .update({ status: "scheduled" })
           .eq("id", campaignId);
+
+        return new Response(
+          JSON.stringify({
+            campaign_id: campaignId,
+            scheduled_for: sendAt!.toISOString(),
+            recipients: recipients.length,
+            status: "scheduled",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
       }
-      return new Response(
-        JSON.stringify({ campaign_id: campaignId, message: "No eligible recipients." }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // Insert recipient rows (status defaults to queued)
-    const toInsert = recipients.map((r) => ({
-      campaign_id: campaignId,
-      email_address: r.email,
-      contact_id: r.id,
-      status: isScheduled ? "queued" : "processing",
-    }));
-
-    const { error: recErr } = await supabase.from("email_recipients").insert(toInsert);
-    if (recErr) throw recErr;
-
-    if (isScheduled) {
-      // Leave for scheduler to process later
-      await supabase
-        .from("email_campaigns")
-        .update({ status: "scheduled" })
-        .eq("id", campaignId);
-
-      return new Response(
-        JSON.stringify({
-          campaign_id: campaignId,
-          scheduled_for: sendAt!.toISOString(),
-          recipients: recipients.length,
-          status: "scheduled",
-        }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
     }
 
     // Immediate send
@@ -186,7 +192,7 @@ serve(async (req: Request) => {
     }
     const resend = new Resend(resendApiKey);
 
-    const fromAddress = payload.from?.trim() || "onboarding@resend.dev";
+    
 
     let sent = 0;
     let failed = 0;
