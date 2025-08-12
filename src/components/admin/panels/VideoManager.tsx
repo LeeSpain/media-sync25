@@ -107,14 +107,9 @@ export default function VideoManager({ companyData }: { companyData?: CompanyDat
     setVideoCreationStep(0);
 
     try {
-      // Ensure authenticated session and pass Authorization header
+      // Try to include current JWT, but don't block if missing (Supabase client will attach if available)
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        toast({ title: 'Please sign in again', description: 'Your session appears to have expired.', variant: 'destructive' });
-        setIsCreatingVideo(false);
-        return;
-      }
-      const authHeaders = { Authorization: `Bearer ${session.access_token}` };
+      const authHeaders = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined;
 
       // 1) Generate script via Edge Function
       const { data: created, error: createErr } = await supabase.functions.invoke('video-create', {
