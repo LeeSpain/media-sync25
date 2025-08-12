@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { 
   Users, Building, DollarSign, Activity, Plus, 
@@ -160,7 +159,7 @@ export default function CRMProfileSidebar() {
 
   return (
     <div className="w-80 bg-background border-l h-full flex flex-col">
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-6">
           {/* User Profile Section */}
           <Card>
@@ -324,7 +323,7 @@ export default function CRMProfileSidebar() {
             </CardContent>
           </Card>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
