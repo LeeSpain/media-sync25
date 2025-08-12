@@ -115,47 +115,6 @@ export default function CRMProfileSidebar() {
     return `https://${url}`;
   };
 
-  if (!userProfile) {
-    return (
-      <div className="w-80 bg-background border-l p-4">
-        <div className="space-y-4">
-          <div className="flex items-center space-x-3">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-40" />
-            </div>
-          </div>
-          <Card>
-            <CardHeader className="pb-2">
-              <Skeleton className="h-4 w-28" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <Skeleton className="h-4 w-36" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex items-start space-x-3">
-                  <Skeleton className="h-8 w-8 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-3 w-56" />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-80 bg-background border-l h-full flex flex-col">
@@ -167,17 +126,17 @@ export default function CRMProfileSidebar() {
               <div className="flex items-center space-x-3">
                 <Avatar className="h-12 w-12">
                   <AvatarImage 
-                    src={userProfile.avatar_url || "/placeholder.svg"}
-                    alt={`${userProfile.display_name} avatar`}
+                    src={userProfile?.avatar_url || "/placeholder.svg"}
+                    alt={`${userProfile?.display_name ?? "User"} avatar`}
                     onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }}
                   />
                   <AvatarFallback>
-                    {userProfile.display_name?.charAt(0).toUpperCase() || "U"}
+                    {userProfile?.display_name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h3 className="font-semibold">{userProfile.display_name}</h3>
-                  <p className="text-sm text-muted-foreground">{userProfile.email}</p>
+                  <h3 className="font-semibold">{userProfile?.display_name ?? "Loading..."}</h3>
+                  <p className="text-sm text-muted-foreground">{userProfile?.email ?? ""}</p>
                 </div>
               </div>
             </CardHeader>
