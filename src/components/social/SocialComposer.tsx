@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSupabaseUser } from "@/hooks/useSupabaseUser";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
 
 const platforms = [
   { value: "twitter", label: "X / Twitter" },
@@ -22,7 +23,46 @@ export default function SocialComposer() {
   const [platform, setPlatform] = useState<string>(platforms[0].value);
   const [loading, setLoading] = useState(false);
 
-  const disabled = !user || !text.trim() || !platform || loading;
+  const [hasConnection, setHasConnection] = useState<boolean>(false);
+  const [connLoading, setConnLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!user) {
+        if (active) {
+          setHasConnection(false);
+          setConnLoading(false);
+        }
+        return;
+      }
+      try {
+        setConnLoading(true);
+        const { data, error } = await supabase
+          .from("connected_accounts")
+          .select("id, status, created_at")
+          .eq("provider", platform)
+          .eq("created_by", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (!active) return;
+        if (error) {
+          console.warn("Failed to load connection", error);
+          setHasConnection(false);
+        } else {
+          const row = (data ?? [])[0];
+          setHasConnection(!!row && row.status !== "disconnected");
+        }
+      } finally {
+        if (active) setConnLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [user?.id, platform]);
+
+  const disabled = !user || !text.trim() || !platform || loading || !hasConnection || connLoading;
 
   const onPublish = async () => {
     if (!user) {
@@ -112,10 +152,19 @@ export default function SocialComposer() {
             </div>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
           <Button onClick={onPublish} disabled={disabled}>
             {loading ? "Publishing..." : "Publish now"}
           </Button>
+          {!hasConnection && !connLoading && (
+            <p className="text-sm text-muted-foreground">
+              Connect your {platforms.find((p) => p.value === platform)?.label} account in Settings before publishing.
+              {" "}
+              <Button variant="link" asChild className="px-1">
+                <Link to="/dashboard/settings#admin">Open Settings</Link>
+              </Button>
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
