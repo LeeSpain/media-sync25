@@ -12,6 +12,7 @@ import Onboarding from "./pages/Onboarding";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import CheckEmail from "./pages/CheckEmail";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import Overview from "./pages/dashboard/Overview";
 import Planner from "./pages/dashboard/Planner";
@@ -55,6 +56,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/check-email" element={<CheckEmail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/dashboard" element={<DashboardLayout />}>

@@ -32,9 +32,12 @@ const Register = () => {
     const name = String(fd.get("name") || "");
     const email = String(fd.get("email") || "");
     const password = String(fd.get("password") || "");
+    const jobTitle = String(fd.get("job_title") || "");
+    const phone = String(fd.get("phone") || "");
     const companyName = String(fd.get("company_name") || "");
     const companyWebsite = String(fd.get("company_website") || "");
-    const redirectUrl = `${window.location.origin}/`;
+    const companyIndustry = String(fd.get("company_industry") || "");
+    const redirectUrl = `${window.location.origin}/dashboard`;
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -57,7 +60,8 @@ const Register = () => {
         // Save display name
         await supabase.from("profiles").update({ display_name: name }).eq("id", userId);
 
-        // Create or reuse company
+        // Create or reuse company and capture id
+        let companyId: string | null = null;
         if (companyName || companyWebsite) {
           const { data: existing } = await supabase
             .from("crm_companies")
@@ -71,13 +75,40 @@ const Register = () => {
             )
             .limit(1);
 
-          if (!existing || existing.length === 0) {
-            await supabase.from("crm_companies").insert({
-              name: companyName || companyWebsite || "My Company",
-              website: companyWebsite || null,
-              created_by: userId,
-            });
+          if (existing && existing.length > 0) {
+            companyId = existing[0].id as string;
+          } else {
+            const { data: inserted } = await supabase
+              .from("crm_companies")
+              .insert({
+                name: companyName || companyWebsite || "My Company",
+                website: companyWebsite || null,
+                industry: companyIndustry || null,
+                created_by: userId,
+              })
+              .select("id")
+              .single();
+            companyId = inserted?.id ?? null;
           }
+        }
+
+        // Create CRM contact if not exists
+        const { data: contactExisting } = await supabase
+          .from("crm_contacts")
+          .select("id")
+          .eq("created_by", userId)
+          .eq("email", email)
+          .limit(1);
+
+        if (!contactExisting || contactExisting.length === 0) {
+          await supabase.from("crm_contacts").insert({
+            created_by: userId,
+            email,
+            first_name: name,
+            job_title: jobTitle || null,
+            mobile_phone: phone || null,
+            company_id: companyId,
+          });
         }
 
         toast({ title: "Account created", description: "Redirecting to dashboard..." });
@@ -87,19 +118,19 @@ const Register = () => {
         navigate("/dashboard", { replace: true });
       }
     } else {
-      // Store for later creation after email confirmation
+      // Store for later creation after email confirmation and go to check email page
       localStorage.setItem(
-        "pending_registration_company",
-        JSON.stringify({ name, companyName, companyWebsite })
+        "pending_registration",
+        JSON.stringify({ name, email, jobTitle, phone, companyName, companyWebsite, companyIndustry })
       );
-      toast({ title: "Check your email", description: "Confirm your email to finish registration." });
+      navigate("/check-email", { replace: true });
     }
   };
 
   const onGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/` },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
     if (error) {
       toast({ title: "Google sign-up failed", description: error.message, variant: "destructive" });
@@ -133,14 +164,28 @@ const Register = () => {
                 <Label htmlFor="name">{t("auth.name") || "Name"}</Label>
                 <Input id="name" name="name" type="text" required placeholder="Alex Johnson" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">{t("auth.email") || "Email"}</Label>
-                <Input id="email" name="email" type="email" required placeholder="you@company.com" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="email">{t("auth.email") || "Email"}</Label>
+                  <Input id="email" name="email" type="email" required placeholder="you@company.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">{t("auth.password") || "Password"}</Label>
+                  <Input id="password" name="password" type="password" required placeholder="••••••••" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">{t("auth.password") || "Password"}</Label>
-                <Input id="password" name="password" type="password" required placeholder="••••••••" />
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="job_title">Job title</Label>
+                  <Input id="job_title" name="job_title" type="text" placeholder="Founder / Marketer" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input id="phone" name="phone" type="tel" placeholder="+1 555 000 1234" />
+                </div>
               </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="company_name">Company name</Label>
@@ -151,6 +196,12 @@ const Register = () => {
                   <Input id="company_website" name="company_website" type="url" placeholder="https://acme.com" />
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="company_industry">Industry</Label>
+                <Input id="company_industry" name="company_industry" type="text" placeholder="SaaS, E‑commerce, Agency..." />
+              </div>
+
               <Button type="submit" className="w-full">
                 {t("auth.createAccount") || "Create account"}
               </Button>
