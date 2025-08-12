@@ -167,7 +167,11 @@ export default function CRMProfileSidebar() {
             <CardHeader className="pb-3">
               <div className="flex items-center space-x-3">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={userProfile.avatar_url} />
+                  <AvatarImage 
+                    src={userProfile.avatar_url || "/placeholder.svg"}
+                    alt={`${userProfile.display_name} avatar`}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }}
+                  />
                   <AvatarFallback>
                     {userProfile.display_name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
