@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -83,6 +83,32 @@ const Onboarding = () => {
 
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const user = auth?.user;
+        if (user) {
+          const { data: row } = await supabase
+            .from("onboarding")
+            .select("data")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (row?.data) {
+            setData((prev) => ({ ...prev, ...((row.data ?? {}) as Partial<OnboardingData>) }));
+            return;
+          }
+        }
+        const ls = localStorage.getItem("onboardingData");
+        if (ls) {
+          setData((prev) => ({ ...prev, ...JSON.parse(ls) }));
+        }
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
+
   const canNext = useMemo(() => {
     if (step === "profile") return Boolean(data.name && data.industry && data.personalFirstName);
     return true;
@@ -109,22 +135,38 @@ const Onboarding = () => {
         const website = (data.website || "").trim();
         let companyId: string | null = null;
 
-        if (businessName) {
-          const { data: existing, error: selectErr } = await supabase
-            .from("crm_companies")
-            .select("id")
-            .eq("created_by", user.id)
-            .eq("name", businessName)
-            .maybeSingle();
-          if (selectErr) throw selectErr;
+        if (businessName || website) {
+          let existingCompanyId: string | null = null;
 
-          if (existing?.id) {
-            companyId = existing.id;
+          if (businessName) {
+            const { data: byName, error: byNameErr } = await supabase
+              .from("crm_companies")
+              .select("id")
+              .eq("created_by", user.id)
+              .eq("name", businessName)
+              .maybeSingle();
+            if (byNameErr) throw byNameErr;
+            if (byName?.id) existingCompanyId = byName.id;
+          }
+
+          if (!existingCompanyId && website) {
+            const { data: byWeb, error: byWebErr } = await supabase
+              .from("crm_companies")
+              .select("id")
+              .eq("created_by", user.id)
+              .eq("website", website)
+              .maybeSingle();
+            if (byWebErr) throw byWebErr;
+            if (byWeb?.id) existingCompanyId = byWeb.id;
+          }
+
+          if (existingCompanyId) {
+            companyId = existingCompanyId;
           } else {
             const { data: inserted, error: insertErr } = await supabase
               .from("crm_companies")
               .insert({
-                name: businessName,
+                name: businessName || website || "New Company",
                 website: website || null,
                 industry: data.industry || null,
                 description: data.description || null,
@@ -138,27 +180,81 @@ const Onboarding = () => {
           }
         }
 
-        // 3) Create primary contact linked to the company
-        const contactPayload: any = {
-          created_by: user.id,
-          first_name: data.personalFirstName || null,
-          last_name: data.personalLastName || null,
-          email: data.personalEmail || user.email || null,
-          phone: data.personalPhone || null,
-        };
-        if (companyId) contactPayload.company_id = companyId;
-        await supabase.from("crm_contacts").insert(contactPayload);
+        // 3) Create or update primary contact linked to the company
+        const email = (data.personalEmail || user.email || "").trim();
+        let contactId: string | null = null;
 
-        // 4) Add website link
+        if (email) {
+          const { data: existingContact, error: contactSelErr } = await supabase
+            .from("crm_contacts")
+            .select("id, company_id")
+            .eq("created_by", user.id)
+            .eq("email", email)
+            .maybeSingle();
+          if (contactSelErr) throw contactSelErr;
+
+          if (existingContact?.id) {
+            contactId = existingContact.id;
+            const updatePayload: any = {
+              first_name: data.personalFirstName || null,
+              last_name: data.personalLastName || null,
+              phone: data.personalPhone || null,
+            };
+            if (companyId && !existingContact.company_id) {
+              updatePayload.company_id = companyId;
+            }
+            await supabase.from("crm_contacts").update(updatePayload).eq("id", existingContact.id);
+          } else {
+            const insertPayload: any = {
+              created_by: user.id,
+              first_name: data.personalFirstName || null,
+              last_name: data.personalLastName || null,
+              email,
+              phone: data.personalPhone || null,
+            };
+            if (companyId) insertPayload.company_id = companyId;
+            const { data: insertedContact, error: insertContactErr } = await supabase
+              .from("crm_contacts")
+              .insert(insertPayload)
+              .select("id")
+              .single();
+            if (insertContactErr) throw insertContactErr;
+            contactId = insertedContact.id;
+          }
+        } else {
+          // If no email, create a contact only if we have at least a name
+          if (data.personalFirstName || data.personalLastName) {
+            const insertPayload: any = {
+              created_by: user.id,
+              first_name: data.personalFirstName || null,
+              last_name: data.personalLastName || null,
+              phone: data.personalPhone || null,
+            };
+            if (companyId) insertPayload.company_id = companyId;
+            await supabase.from("crm_contacts").insert(insertPayload);
+          }
+        }
+
+        // 4) Add website link (dedup)
         if (companyId && website) {
-          await supabase.from("crm_links").insert({
-            link_type: "website",
-            label: "Website",
-            url: website,
-            company_id: companyId,
-            created_by: user.id,
-            is_primary: true,
-          });
+          const { data: existingLink } = await supabase
+            .from("crm_links")
+            .select("id")
+            .eq("company_id", companyId)
+            .eq("link_type", "website")
+            .eq("url", website)
+            .maybeSingle();
+
+          if (!existingLink) {
+            await supabase.from("crm_links").insert({
+              link_type: "website",
+              label: "Website",
+              url: website,
+              company_id: companyId,
+              created_by: user.id,
+              is_primary: true,
+            });
+          }
         }
 
         toast.success("Onboarding completed. CRM client created.");
@@ -194,7 +290,7 @@ const Onboarding = () => {
       <div className="grid gap-6 md:grid-cols-[280px_1fr]">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Steps</CardTitle>
+            <CardTitle className="text-base">{t("onboarding.headings.steps")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ol className="space-y-2 text-sm">
@@ -261,7 +357,7 @@ const Onboarding = () => {
             {step === "brand_audience" && (
               <section className="space-y-8">
                 <div className="space-y-4">
-                  <h3 className="text-base font-semibold">Brand</h3>
+                  <h3 className="text-base font-semibold">{t("onboarding.headings.brand")}</h3>
                   <div className="space-y-2">
                     <Label>{t("field.logo")}</Label>
                     <Input type="file" accept="image/*" onChange={(e) => onLogoChange(e.target.files?.[0])} />
@@ -301,7 +397,7 @@ const Onboarding = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-base font-semibold">Audience</h3>
+                  <h3 className="text-base font-semibold">{t("onboarding.headings.audience")}</h3>
                   <div className="space-y-2">
                     <Label>{t("field.primaryAudience")}</Label>
                     <Textarea rows={3} value={data.audience} onChange={(e) => setData({ ...data, audience: e.target.value })} />
@@ -330,7 +426,7 @@ const Onboarding = () => {
             {step === "goals_competitors" && (
               <section className="space-y-8">
                 <div className="space-y-4">
-                  <h3 className="text-base font-semibold">Goals</h3>
+                  <h3 className="text-base font-semibold">{t("onboarding.headings.goals")}</h3>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label>{t("field.goal")}</Label>
@@ -354,7 +450,7 @@ const Onboarding = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-base font-semibold">Competitors</h3>
+                  <h3 className="text-base font-semibold">{t("onboarding.headings.competitors")}</h3>
                   <div className="space-y-2">
                     <Label>{t("field.competitorLinks")}</Label>
                     <div className="space-y-2">
@@ -376,8 +472,8 @@ const Onboarding = () => {
             {step === "connections_review" && (
               <section className="space-y-6">
                 <div className="space-y-2">
-                  <h3 className="text-base font-semibold">Connections</h3>
-                  <p className="text-sm text-muted-foreground">You can connect your accounts now or later in Settings.</p>
+                  <h3 className="text-base font-semibold">{t("onboarding.headings.connections")}</h3>
+                  <p className="text-sm text-muted-foreground">{t("onboarding.copy.connectLater")}</p>
 
                   <div className="space-y-2">
                     <Label>{t("field.social")}</Label>
@@ -424,8 +520,8 @@ const Onboarding = () => {
                 <SocialConnectionsStatus />
 
                 <div className="space-y-2">
-                  <h3 className="text-base font-semibold">Review</h3>
-                  <p className="text-sm text-muted-foreground">Review your inputs. Click Finish to proceed to your workspace.</p>
+                  <h3 className="text-base font-semibold">{t("onboarding.headings.review")}</h3>
+                  <p className="text-sm text-muted-foreground">{t("onboarding.copy.reviewLead")}</p>
                   <pre className="rounded-md border bg-muted/40 p-4 text-xs overflow-auto max-h-[320px]">{JSON.stringify(data, null, 2)}</pre>
                 </div>
               </section>
@@ -434,7 +530,7 @@ const Onboarding = () => {
             <div className="flex items-center justify-between pt-2">
               <Button variant="outline" onClick={back} disabled={step === steps[0]}>{t("action.back")}</Button>
               {step !== "connections_review" ? (
-                <Button variant="default" onClick={() => canNext ? next() : toast.error("Please complete required fields")}>{t("action.next")}</Button>
+                <Button variant="default" onClick={() => canNext ? next() : toast.error(t("common.missingFields"))}>{t("action.next")}</Button>
               ) : (
                 <div className="flex gap-2">
                   <Button variant="hero" onClick={finish} disabled={isSaving}>{t("action.finish")}</Button>

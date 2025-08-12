@@ -20,13 +20,29 @@ const dict: Dict = {
 
   // Onboarding steps
   "onboarding.title": { en: "Business Onboarding", es: "Registro del Negocio" },
+  // Legacy step keys (kept for compatibility)
   "onboarding.step.basic": { en: "Basic Info", es: "Información Básica" },
   "onboarding.step.brand": { en: "Branding", es: "Marca" },
   "onboarding.step.audience": { en: "Target Audience", es: "Público Objetivo" },
   "onboarding.step.goals": { en: "Goals", es: "Objetivos" },
   "onboarding.step.connections": { en: "Connections", es: "Conexiones" },
   "onboarding.step.competitors": { en: "Competitors", es: "Competidores" },
+  // Current step keys used by the UI
+  "onboarding.step.profile": { en: "Profile & Business", es: "Perfil y Negocio" },
+  "onboarding.step.brand_audience": { en: "Brand & Audience", es: "Marca y Audiencia" },
+  "onboarding.step.goals_competitors": { en: "Goals & Competitors", es: "Objetivos y Competidores" },
+  "onboarding.step.connections_review": { en: "Connections & Review", es: "Conexiones y Revisión" },
   "onboarding.review": { en: "Review & Finish", es: "Revisar y Finalizar" },
+  // Onboarding headings and copy
+  "onboarding.headings.steps": { en: "Steps", es: "Pasos" },
+  "onboarding.headings.brand": { en: "Brand", es: "Marca" },
+  "onboarding.headings.audience": { en: "Audience", es: "Audiencia" },
+  "onboarding.headings.goals": { en: "Goals", es: "Objetivos" },
+  "onboarding.headings.competitors": { en: "Competitors", es: "Competidores" },
+  "onboarding.headings.connections": { en: "Connections", es: "Conexiones" },
+  "onboarding.headings.review": { en: "Review", es: "Revisión" },
+  "onboarding.copy.connectLater": { en: "You can connect your accounts now or later in Settings.", es: "Puedes conectar tus cuentas ahora o más tarde en Ajustes." },
+  "onboarding.copy.reviewLead": { en: "Review your inputs. Click Finish to proceed to your workspace.", es: "Revisa tus datos. Haz clic en Finalizar para ir a tu espacio." },
 
   // Fields
   "field.businessName": { en: "Business Name", es: "Nombre del negocio" },
