@@ -1160,6 +1160,116 @@ export type Database = {
         }
         Relationships: []
       }
+      video_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          error: string | null
+          id: string
+          job_type: Database["public"]["Enums"]["video_job_type"]
+          payload: Json
+          result: Json
+          started_at: string | null
+          status: Database["public"]["Enums"]["job_status"]
+          updated_at: string
+          video_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          error?: string | null
+          id?: string
+          job_type: Database["public"]["Enums"]["video_job_type"]
+          payload?: Json
+          result?: Json
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+          video_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          error?: string | null
+          id?: string
+          job_type?: Database["public"]["Enums"]["video_job_type"]
+          payload?: Json
+          result?: Json
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_jobs_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          published_url: string | null
+          script: Json
+          size_bytes: number | null
+          status: Database["public"]["Enums"]["video_status"]
+          style: string | null
+          thumbnail_url: string | null
+          title: string | null
+          type: string | null
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          published_url?: string | null
+          script?: Json
+          size_bytes?: number | null
+          status?: Database["public"]["Enums"]["video_status"]
+          style?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          published_url?: string | null
+          script?: Json
+          size_bytes?: number | null
+          status?: Database["public"]["Enums"]["video_status"]
+          style?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1223,6 +1333,7 @@ export type Database = {
         | "comment"
         | "like"
         | "share"
+      job_status: "queued" | "running" | "completed" | "failed"
       research_status: "pending" | "in_progress" | "completed" | "failed"
       schedule_status:
         | "scheduled"
@@ -1231,6 +1342,19 @@ export type Database = {
         | "published"
         | "failed"
         | "canceled"
+      video_job_type:
+        | "generate_script"
+        | "generate_scenes"
+        | "generate_tts"
+        | "assemble"
+        | "publish"
+      video_status:
+        | "draft"
+        | "queued"
+        | "processing"
+        | "ready"
+        | "failed"
+        | "published"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1412,6 +1536,7 @@ export const Constants = {
         "like",
         "share",
       ],
+      job_status: ["queued", "running", "completed", "failed"],
       research_status: ["pending", "in_progress", "completed", "failed"],
       schedule_status: [
         "scheduled",
@@ -1420,6 +1545,21 @@ export const Constants = {
         "published",
         "failed",
         "canceled",
+      ],
+      video_job_type: [
+        "generate_script",
+        "generate_scenes",
+        "generate_tts",
+        "assemble",
+        "publish",
+      ],
+      video_status: [
+        "draft",
+        "queued",
+        "processing",
+        "ready",
+        "failed",
+        "published",
       ],
     },
   },

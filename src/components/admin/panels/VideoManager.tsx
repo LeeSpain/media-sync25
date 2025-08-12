@@ -19,6 +19,9 @@ import {
   Instagram,
 } from "lucide-react";
 
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
 // Admin Video Manager with mock creation flow and content library
 export type CompanyData = { name?: string };
 export default function VideoManager({ companyData }: { companyData?: CompanyData }) {
@@ -29,6 +32,8 @@ export default function VideoManager({ companyData }: { companyData?: CompanyDat
   const [createdVideos, setCreatedVideos] = useState<any[]>([]);
   const [generatedContent, setGeneratedContent] = useState<any[]>([]);
   const [videoAnalytics, setVideoAnalytics] = useState<any | null>(null);
+
+  const { toast } = useToast();
 
   const videoTypes = [
     { id: "intro", name: "Company Introduction", description: "Professional company overview video", duration: "60-90s", icon: Camera },
@@ -56,62 +61,73 @@ export default function VideoManager({ companyData }: { companyData?: CompanyDat
     }
   }, [createdVideos]);
 
-  const handleCreateVideo = async (videoType: string) => {
+  const handleCreateVideo = async (videoType: string, options?: any) => {
     setSelectedVideoType(videoType);
     setIsCreatingVideo(true);
     setVideoCreationStep(0);
 
     try {
-      for (let step = 0; step < creationSteps.length; step++) {
-        setVideoCreationStep(step);
-        // simulate work
-        // biome-ignore lint/suspicious/noGlobalIsFinite: demo
-        await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000));
+      // Step 1: Generate script via Edge Function
+      const { data, error } = await supabase.functions.invoke('video-create', {
+        body: {
+          companyName: companyData?.name,
+          type: videoType,
+          style: options?.style ?? 'professional',
+        },
+      });
+
+      if (error) {
+        throw error;
       }
 
-      const vt = videoTypes.find((v) => v.id === videoType)?.name ?? "Video";
+      const script = data?.script || {};
+      const title = script?.title || `${companyData?.name || 'Company'} - ${videoTypes.find((v) => v.id === videoType)?.name ?? 'Video'}`;
+      const duration = script?.duration_seconds || 90;
+
       const newVideo = {
-        id: Date.now(),
+        id: data?.videoId || Date.now(),
         type: videoType,
-        title: `${companyData?.name || "Company"} - ${vt}`,
-        duration: Math.floor(Math.random() * 60) + 60,
-        thumbnail:
-          `data:image/svg+xml,${encodeURIComponent(`
-            <svg width="320" height="180" xmlns="http://www.w3.org/2000/svg">
-              <rect width="320" height="180" fill="#0ea5e9"/>
-              <circle cx="160" cy="90" r="30" fill="white" opacity="0.9"/>
-              <polygon points="150,75 150,105 175,90" fill="#0ea5e9"/>
-              <text x="160" y="140" text-anchor="middle" fill="white" font-size="12" font-family="Arial">${vt}</text>
-            </svg>
-          `)}`,
-        youtubeUrl: `https://youtube.com/watch?v=${Date.now()}`,
+        title,
+        duration,
+        thumbnail: '/placeholder.svg',
+        youtubeUrl: '#',
         createdAt: new Date().toISOString(),
-        status: "published",
-        views: Math.floor(Math.random() * 500) + 50,
-        likes: Math.floor(Math.random() * 50) + 5,
-        comments: Math.floor(Math.random() * 20) + 1,
+        status: 'processing',
+        views: 0,
+        likes: 0,
+        comments: 0,
       };
 
       setCreatedVideos((prev) => [newVideo, ...prev]);
 
-      const videoContent = {
-        id: Date.now() + 1,
-        platform: "youtube",
-        type: "video",
-        content: newVideo.title,
-        videoData: newVideo,
-        createdAt: new Date().toLocaleDateString(),
-        status: "published",
-      };
+      setGeneratedContent((prev) => [
+        {
+          id: `${newVideo.id}-content`,
+          platform: 'video',
+          type: 'video',
+          content: title,
+          videoData: newVideo,
+          createdAt: new Date().toLocaleDateString(),
+          status: 'processing',
+        },
+        ...prev,
+      ]);
 
-      setGeneratedContent((prev) => [videoContent, ...prev]);
-      setTimeout(() => {
-        setIsCreatingVideo(false);
-        setVideoModal(false);
-        setVideoCreationStep(0);
-      }, 300);
-    } catch (e) {
+      setVideoCreationStep(1);
+      toast({
+        title: 'Script generated',
+        description: 'Next steps: TTS and scene generation will run after connecting services.',
+      });
+    } catch (e: any) {
+      console.error('Video creation failed', e);
+      toast({
+        title: 'Video creation failed',
+        description: e?.message || 'Please try again.',
+      });
+    } finally {
       setIsCreatingVideo(false);
+      setVideoModal(false);
+      setVideoCreationStep(0);
     }
   };
 
@@ -348,7 +364,7 @@ function VideoCreationModal({
             <button onClick={onClose} className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground">
               Cancel
             </button>
-            <button onClick={() => onCreateVideo(selectedType)} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
+            <button onClick={() => onCreateVideo(selectedType, customizations)} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
               <Wand2 className="h-4 w-4" /> Create Video
             </button>
           </div>
