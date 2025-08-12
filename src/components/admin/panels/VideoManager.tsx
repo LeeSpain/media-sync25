@@ -21,6 +21,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { assembleSlideshowVideo } from "@/utils/assembleVideo";
 
 // Admin Video Manager with mock creation flow and content library
 export type CompanyData = { name?: string };
