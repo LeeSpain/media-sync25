@@ -3,16 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 
 const links = [
-  { to: "/admin/analytics", label: "Analytics" },
-  { to: "/admin/crm", label: "CRM" },
-  { to: "/admin/content", label: "Content" },
-  { to: "/admin/email", label: "Email" },
-  { to: "/admin/members", label: "Members" },
-  { to: "/admin/messages", label: "Messages" },
-  { to: "/admin/planner", label: "Planner" },
-  { to: "/admin/settings", label: "Settings" },
-  { to: "/admin/social", label: "Social" },
+  { to: "/admin/content-ai", label: "Content AI" },
+  { to: "/admin/sales-ai", label: "Sales AI" },
   { to: "/admin/video", label: "Video" },
+  { to: "/admin/members", label: "Members" },
+  { to: "/admin/settings", label: "Settings" },
 ];
 
 export default function AdminQuickLinks() {

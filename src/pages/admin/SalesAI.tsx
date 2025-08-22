@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Target, MessageSquare, TrendingUp, Zap, Users } from "lucide-react";
 
-const APEX = () => {
+const SalesAI = () => {
   const agents = [
     {
       name: "Analyst Agent",
@@ -40,8 +40,8 @@ const APEX = () => {
       <div className="flex items-center gap-3">
         <Zap className="h-8 w-8 text-primary" />
         <div>
-          <h1 className="text-3xl font-bold">APEX Intelligence Platform</h1>
-          <p className="text-muted-foreground">Autonomous Prospect Execution System</p>
+          <h1 className="text-3xl font-bold">Sales AI</h1>
+          <p className="text-muted-foreground">Advanced AI-powered lead generation and sales automation</p>
         </div>
       </div>
 
@@ -77,7 +77,7 @@ const APEX = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            APEX Performance Metrics
+            Sales AI Performance Metrics
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -105,4 +105,4 @@ const APEX = () => {
   );
 };
 
-export default APEX;
+export default SalesAI;

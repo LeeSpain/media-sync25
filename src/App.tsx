@@ -30,16 +30,9 @@ import AdminLayout from "./components/admin/AdminLayout";
 import AdminOverviewPage from "./pages/admin/Overview";
 import AdminMembersPage from "./pages/admin/Members";
 import AdminSettingsPage from "./pages/admin/Settings";
-import AdminCRM from "./pages/admin/CRM";
-import AdminPlanner from "./pages/admin/Planner";
-import AdminContent from "./pages/admin/Content";
-
-import AdminSocial from "./pages/admin/Social";
-import AdminEmail from "./pages/admin/Email";
-import AdminMessages from "./pages/admin/Messages";
-import AdminAnalytics from "./pages/admin/Analytics";
-import MultiAgent from "./pages/admin/MultiAgent";
-import APEX from "./pages/admin/APEX";
+import ContentAI from "./pages/admin/ContentAI";
+import SalesAI from "./pages/admin/SalesAI";
+import AdminVideo from "./pages/admin/Video";
 import AdminGate from "./components/auth/AdminGate";
 import ModuleGate from "./components/auth/ModuleGate";
  
@@ -77,18 +70,11 @@ const App = () => {
             </Route>
             <Route path="/admin" element={<AdminGate><AdminLayout /></AdminGate>}>
               <Route index element={<AdminOverviewPage />} />
-              <Route path="multi-agent" element={<MultiAgent />} />
-              <Route path="apex" element={<APEX />} />
+              <Route path="content-ai" element={<ContentAI />} />
+              <Route path="sales-ai" element={<SalesAI />} />
+              <Route path="video" element={<AdminVideo />} />
               <Route path="members" element={<AdminMembersPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
-              <Route path="crm" element={<AdminCRM />} />
-              <Route path="planner" element={<AdminPlanner />} />
-              <Route path="content" element={<AdminContent />} />
-              
-              <Route path="social" element={<AdminSocial />} />
-              <Route path="email" element={<AdminEmail />} />
-              <Route path="messages" element={<AdminMessages />} />
-              <Route path="analytics" element={<AdminAnalytics />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

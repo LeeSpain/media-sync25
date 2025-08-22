@@ -14,7 +14,7 @@ import { useSupabaseUser } from "@/hooks/useSupabaseUser";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Brain, Search, Edit, MessageSquare, Calendar, BarChart3, Video, Image } from "lucide-react";
 
-export default function MultiAgent() {
+export default function ContentAI() {
   const { user } = useSupabaseUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -218,8 +218,8 @@ export default function MultiAgent() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Multi-Agent System</h1>
-          <p className="text-muted-foreground">AI-powered business content and service automation</p>
+          <h1 className="text-3xl font-bold">Content AI</h1>
+          <p className="text-muted-foreground">AI-powered business content creation and automation</p>
         </div>
       </div>
 
