@@ -10,10 +10,11 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Shield, Briefcase, Calendar, BookOpenText, Hash, Mail, MessageSquareText, BarChart3, Settings as SettingsIcon } from "lucide-react";
+import { Shield, Briefcase, Calendar, BookOpenText, Hash, Mail, MessageSquareText, BarChart3, Settings as SettingsIcon, Brain } from "lucide-react";
 
 const adminItems = [
   { title: "Overview", url: "/admin", icon: Shield },
+  { title: "Multi-Agent", url: "/admin/multi-agent", icon: Brain },
   { title: "CRM", url: "/admin/crm", icon: Briefcase },
   { title: "Planner", url: "/admin/planner", icon: Calendar },
   { title: "Content", url: "/admin/content", icon: BookOpenText },

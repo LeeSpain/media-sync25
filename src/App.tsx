@@ -38,6 +38,7 @@ import AdminSocial from "./pages/admin/Social";
 import AdminEmail from "./pages/admin/Email";
 import AdminMessages from "./pages/admin/Messages";
 import AdminAnalytics from "./pages/admin/Analytics";
+import MultiAgent from "./pages/admin/MultiAgent";
 import AdminGate from "./components/auth/AdminGate";
 import ModuleGate from "./components/auth/ModuleGate";
  
@@ -75,6 +76,7 @@ const App = () => {
             </Route>
             <Route path="/admin" element={<AdminGate><AdminLayout /></AdminGate>}>
               <Route index element={<AdminOverviewPage />} />
+              <Route path="multi-agent" element={<MultiAgent />} />
               <Route path="members" element={<AdminMembersPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="crm" element={<AdminCRM />} />
