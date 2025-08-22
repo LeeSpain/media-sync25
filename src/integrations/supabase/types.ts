@@ -7,13 +7,69 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
+      agent_tasks: {
+        Row: {
+          agent_type: string
+          business_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          error_message: string | null
+          id: string
+          input_data: Json | null
+          output_data: Json | null
+          priority: number | null
+          status: string
+          task_type: string
+          updated_at: string
+        }
+        Insert: {
+          agent_type: string
+          business_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          error_message?: string | null
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          priority?: number | null
+          status?: string
+          task_type: string
+          updated_at?: string
+        }
+        Update: {
+          agent_type?: string
+          business_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          error_message?: string | null
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          priority?: number | null
+          status?: string
+          task_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_tasks_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_agent_tools: {
         Row: {
           agent_id: string
@@ -289,6 +345,54 @@ export type Database = {
         }
         Relationships: []
       }
+      businesses: {
+        Row: {
+          auto_mode: boolean | null
+          brand_guidelines: Json | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          industry: string | null
+          languages: string[] | null
+          name: string
+          research_data: Json | null
+          research_status: string | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          auto_mode?: boolean | null
+          brand_guidelines?: Json | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          languages?: string[] | null
+          name: string
+          research_data?: Json | null
+          research_status?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          auto_mode?: boolean | null
+          brand_guidelines?: Json | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          languages?: string[] | null
+          name?: string
+          research_data?: Json | null
+          research_status?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           created_at: string
@@ -471,6 +575,68 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      content_queue: {
+        Row: {
+          approved_at: string | null
+          business_id: string
+          content: string | null
+          content_type: string
+          created_at: string
+          created_by: string
+          id: string
+          media_urls: string[] | null
+          metadata: Json | null
+          platforms: string[] | null
+          published_at: string | null
+          scheduled_for: string | null
+          status: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          business_id: string
+          content?: string | null
+          content_type: string
+          created_at?: string
+          created_by: string
+          id?: string
+          media_urls?: string[] | null
+          metadata?: Json | null
+          platforms?: string[] | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          business_id?: string
+          content?: string | null
+          content_type?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          media_urls?: string[] | null
+          metadata?: Json | null
+          platforms?: string[] | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_queue_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       content_schedule: {
         Row: {
@@ -966,6 +1132,106 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      customer_conversations: {
+        Row: {
+          business_id: string
+          created_at: string
+          created_by: string
+          customer_email: string | null
+          customer_name: string | null
+          external_id: string | null
+          id: string
+          language: string | null
+          last_message_at: string | null
+          platform: string
+          priority: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          created_by: string
+          customer_email?: string | null
+          customer_name?: string | null
+          external_id?: string | null
+          id?: string
+          language?: string | null
+          last_message_at?: string | null
+          platform: string
+          priority?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          created_by?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          external_id?: string | null
+          id?: string
+          language?: string | null
+          last_message_at?: string | null
+          platform?: string
+          priority?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_conversations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_messages: {
+        Row: {
+          ai_suggested_reply: string | null
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          language: string | null
+          metadata: Json | null
+          reply_approved: boolean | null
+          sender_type: string
+        }
+        Insert: {
+          ai_suggested_reply?: string | null
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          language?: string | null
+          metadata?: Json | null
+          reply_approved?: boolean | null
+          sender_type: string
+        }
+        Update: {
+          ai_suggested_reply?: string | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          language?: string | null
+          metadata?: Json | null
+          reply_approved?: boolean | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "customer_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_campaign_variants: {
         Row: {
@@ -1551,8 +1817,8 @@ export type Database = {
     Functions: {
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
