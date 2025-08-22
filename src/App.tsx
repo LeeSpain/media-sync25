@@ -39,6 +39,7 @@ import AdminEmail from "./pages/admin/Email";
 import AdminMessages from "./pages/admin/Messages";
 import AdminAnalytics from "./pages/admin/Analytics";
 import MultiAgent from "./pages/admin/MultiAgent";
+import APEX from "./pages/admin/APEX";
 import AdminGate from "./components/auth/AdminGate";
 import ModuleGate from "./components/auth/ModuleGate";
  
@@ -77,6 +78,7 @@ const App = () => {
             <Route path="/admin" element={<AdminGate><AdminLayout /></AdminGate>}>
               <Route index element={<AdminOverviewPage />} />
               <Route path="multi-agent" element={<MultiAgent />} />
+              <Route path="apex" element={<APEX />} />
               <Route path="members" element={<AdminMembersPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="crm" element={<AdminCRM />} />

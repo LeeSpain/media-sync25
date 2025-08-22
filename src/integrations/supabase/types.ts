@@ -1233,6 +1233,54 @@ export type Database = {
           },
         ]
       }
+      dynamic_pricing: {
+        Row: {
+          active: boolean | null
+          base_price: number
+          business_id: string
+          competitor_analysis: Json | null
+          conversion_rates: Json | null
+          created_at: string
+          id: string
+          lead_score_multiplier: number | null
+          market_demand_score: number | null
+          optimal_price_points: Json | null
+          seasonal_multiplier: number | null
+          updated_at: string
+          urgency_multiplier: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          base_price: number
+          business_id: string
+          competitor_analysis?: Json | null
+          conversion_rates?: Json | null
+          created_at?: string
+          id?: string
+          lead_score_multiplier?: number | null
+          market_demand_score?: number | null
+          optimal_price_points?: Json | null
+          seasonal_multiplier?: number | null
+          updated_at?: string
+          urgency_multiplier?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          base_price?: number
+          business_id?: string
+          competitor_analysis?: Json | null
+          conversion_rates?: Json | null
+          created_at?: string
+          id?: string
+          lead_score_multiplier?: number | null
+          market_demand_score?: number | null
+          optimal_price_points?: Json | null
+          seasonal_multiplier?: number | null
+          updated_at?: string
+          urgency_multiplier?: number | null
+        }
+        Relationships: []
+      }
       email_campaign_variants: {
         Row: {
           campaign_id: string
@@ -1571,6 +1619,207 @@ export type Database = {
           },
         ]
       }
+      lead_interactions: {
+        Row: {
+          auto_response_content: string | null
+          auto_response_sent: boolean | null
+          channel: string
+          clicked: boolean | null
+          content: string
+          created_at: string
+          direction: string
+          id: string
+          intent_classification: string | null
+          lead_id: string
+          next_action_recommended: string | null
+          opened: boolean | null
+          replied: boolean | null
+          requires_human: boolean | null
+          sentiment_score: number | null
+          sequence_id: string | null
+          subject: string | null
+          urgency_detected: string | null
+        }
+        Insert: {
+          auto_response_content?: string | null
+          auto_response_sent?: boolean | null
+          channel: string
+          clicked?: boolean | null
+          content: string
+          created_at?: string
+          direction: string
+          id?: string
+          intent_classification?: string | null
+          lead_id: string
+          next_action_recommended?: string | null
+          opened?: boolean | null
+          replied?: boolean | null
+          requires_human?: boolean | null
+          sentiment_score?: number | null
+          sequence_id?: string | null
+          subject?: string | null
+          urgency_detected?: string | null
+        }
+        Update: {
+          auto_response_content?: string | null
+          auto_response_sent?: boolean | null
+          channel?: string
+          clicked?: boolean | null
+          content?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          intent_classification?: string | null
+          lead_id?: string
+          next_action_recommended?: string | null
+          opened?: boolean | null
+          replied?: boolean | null
+          requires_human?: boolean | null
+          sentiment_score?: number | null
+          sequence_id?: string | null
+          subject?: string | null
+          urgency_detected?: string | null
+        }
+        Relationships: []
+      }
+      lead_predictions: {
+        Row: {
+          best_performing_channel: string | null
+          conversion_confidence: number | null
+          conversion_probability: number | null
+          created_at: string
+          id: string
+          lead_id: string
+          lifetime_value_prediction: number | null
+          ltv_confidence: number | null
+          model_version: string | null
+          optimal_contact_day: number | null
+          optimal_contact_time: string | null
+          prediction_date: string | null
+          timing_confidence: number | null
+        }
+        Insert: {
+          best_performing_channel?: string | null
+          conversion_confidence?: number | null
+          conversion_probability?: number | null
+          created_at?: string
+          id?: string
+          lead_id: string
+          lifetime_value_prediction?: number | null
+          ltv_confidence?: number | null
+          model_version?: string | null
+          optimal_contact_day?: number | null
+          optimal_contact_time?: string | null
+          prediction_date?: string | null
+          timing_confidence?: number | null
+        }
+        Update: {
+          best_performing_channel?: string | null
+          conversion_confidence?: number | null
+          conversion_probability?: number | null
+          created_at?: string
+          id?: string
+          lead_id?: string
+          lifetime_value_prediction?: number | null
+          ltv_confidence?: number | null
+          model_version?: string | null
+          optimal_contact_day?: number | null
+          optimal_contact_time?: string | null
+          prediction_date?: string | null
+          timing_confidence?: number | null
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          age: number | null
+          ai_score: number | null
+          business_id: string
+          created_at: string
+          created_by: string
+          decision_maker_type: string | null
+          email: string
+          email_quality_score: number | null
+          facebook_url: string | null
+          first_name: string | null
+          id: string
+          income_level: string | null
+          last_engagement: string | null
+          last_name: string | null
+          linkedin_url: string | null
+          location: string | null
+          motivation_type: string | null
+          occupation: string | null
+          pain_points: Json | null
+          phone: string | null
+          qualification_status: string | null
+          social_activity_score: number | null
+          source: string | null
+          status: string | null
+          updated_at: string
+          urgency_level: string | null
+          website_visits: number | null
+        }
+        Insert: {
+          age?: number | null
+          ai_score?: number | null
+          business_id: string
+          created_at?: string
+          created_by: string
+          decision_maker_type?: string | null
+          email: string
+          email_quality_score?: number | null
+          facebook_url?: string | null
+          first_name?: string | null
+          id?: string
+          income_level?: string | null
+          last_engagement?: string | null
+          last_name?: string | null
+          linkedin_url?: string | null
+          location?: string | null
+          motivation_type?: string | null
+          occupation?: string | null
+          pain_points?: Json | null
+          phone?: string | null
+          qualification_status?: string | null
+          social_activity_score?: number | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          urgency_level?: string | null
+          website_visits?: number | null
+        }
+        Update: {
+          age?: number | null
+          ai_score?: number | null
+          business_id?: string
+          created_at?: string
+          created_by?: string
+          decision_maker_type?: string | null
+          email?: string
+          email_quality_score?: number | null
+          facebook_url?: string | null
+          first_name?: string | null
+          id?: string
+          income_level?: string | null
+          last_engagement?: string | null
+          last_name?: string | null
+          linkedin_url?: string | null
+          location?: string | null
+          motivation_type?: string | null
+          occupation?: string | null
+          pain_points?: Json | null
+          phone?: string | null
+          qualification_status?: string | null
+          social_activity_score?: number | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          urgency_level?: string | null
+          website_visits?: number | null
+        }
+        Relationships: []
+      }
       onboarding: {
         Row: {
           created_at: string
@@ -1592,6 +1841,123 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      outreach_campaigns: {
+        Row: {
+          business_id: string
+          channels: string[] | null
+          conversions_count: number | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          responses_count: number | null
+          sequence_days: number[] | null
+          status: string | null
+          target_demographics: Json | null
+          target_psychographics: Json | null
+          target_score_min: number | null
+          total_leads: number | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          channels?: string[] | null
+          conversions_count?: number | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          responses_count?: number | null
+          sequence_days?: number[] | null
+          status?: string | null
+          target_demographics?: Json | null
+          target_psychographics?: Json | null
+          target_score_min?: number | null
+          total_leads?: number | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          channels?: string[] | null
+          conversions_count?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          responses_count?: number | null
+          sequence_days?: number[] | null
+          status?: string | null
+          target_demographics?: Json | null
+          target_psychographics?: Json | null
+          target_score_min?: number | null
+          total_leads?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      outreach_sequences: {
+        Row: {
+          campaign_id: string
+          channels_used: string[] | null
+          conversion_achieved: boolean | null
+          created_at: string
+          current_step: number | null
+          id: string
+          lead_id: string
+          max_steps: number | null
+          next_contact_date: string | null
+          personalized_approach: string | null
+          preferred_channel: string | null
+          response_received: boolean | null
+          social_proof_elements: Json | null
+          status: string | null
+          total_touchpoints: number | null
+          updated_at: string
+          urgency_triggers: Json | null
+        }
+        Insert: {
+          campaign_id: string
+          channels_used?: string[] | null
+          conversion_achieved?: boolean | null
+          created_at?: string
+          current_step?: number | null
+          id?: string
+          lead_id: string
+          max_steps?: number | null
+          next_contact_date?: string | null
+          personalized_approach?: string | null
+          preferred_channel?: string | null
+          response_received?: boolean | null
+          social_proof_elements?: Json | null
+          status?: string | null
+          total_touchpoints?: number | null
+          updated_at?: string
+          urgency_triggers?: Json | null
+        }
+        Update: {
+          campaign_id?: string
+          channels_used?: string[] | null
+          conversion_achieved?: boolean | null
+          created_at?: string
+          current_step?: number | null
+          id?: string
+          lead_id?: string
+          max_steps?: number | null
+          next_contact_date?: string | null
+          personalized_approach?: string | null
+          preferred_channel?: string | null
+          response_received?: boolean | null
+          social_proof_elements?: Json | null
+          status?: string | null
+          total_touchpoints?: number | null
+          updated_at?: string
+          urgency_triggers?: Json | null
         }
         Relationships: []
       }
