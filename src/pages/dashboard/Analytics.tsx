@@ -1,10 +1,14 @@
 import SEO from "@/components/SEO";
+import AnalyticsDashboard from "@/components/analytics/AnalyticsDashboard";
 
 const Analytics = () => (
   <main>
-    <SEO title="Media-Sync Analytics & Reports" description="Unified metrics and AI insights." canonical={window.location.href} />
-    <h1 className="text-2xl md:text-3xl font-bold mb-4">Analytics & Reports</h1>
-    
+    <SEO 
+      title="Analytics | Media-Sync" 
+      description="Monitor performance, track metrics, and analyze your business data with comprehensive analytics dashboard."
+      canonical={window.location.href}
+    />
+    <AnalyticsDashboard />
   </main>
 );
 
