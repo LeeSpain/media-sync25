@@ -100,48 +100,78 @@ const Settings = () => {
         <p className="text-muted-foreground">Profile, onboarding, and data controls.</p>
       </header>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <ProfileSection />
-        <OnboardingSummary />
-      </section>
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="social">Social Media</TabsTrigger>
+          <TabsTrigger value="content">Content Workflow</TabsTrigger>
+          <TabsTrigger value="admin">Admin</TabsTrigger>
+        </TabsList>
 
-      <section>
-        <Card className="border-destructive/30">
-          <CardHeader>
-            <CardTitle className="text-base">Danger zone</CardTitle>
-            <CardDescription>Remove all demo/workspace data you own across CRM and campaigns.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              This action permanently deletes your contacts, companies, deals, activities, tags, pipelines, stages, campaigns, and
-              engagement events. It cannot be undone.
-            </p>
-          </CardContent>
-          <CardFooter className="justify-end">
-            <Button variant="destructive" onClick={resetAllData} disabled={loading} aria-label="Reset all data">
-              {loading ? "Deleting…" : "Reset all data"}
-            </Button>
-          </CardFooter>
-        </Card>
-      </section>
-      {isAdmin && (
-        <section id="admin">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Admin settings</CardTitle>
-              <CardDescription>Platform controls for administrators.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Admin controls will appear here. We’ll move agent, tools, and knowledge management into this section.
-              </p>
-            </CardContent>
-          </Card>
-        </section>
-      )}
+        <TabsContent value="profile" className="space-y-6">
+          <section className="grid gap-4 lg:grid-cols-2">
+            <ProfileSection />
+            <OnboardingSummary />
+          </section>
+
+          <section>
+            <Card className="border-destructive/30">
+              <CardHeader>
+                <CardTitle className="text-base">Danger zone</CardTitle>
+                <CardDescription>Remove all demo/workspace data you own across CRM and campaigns.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  This action permanently deletes your contacts, companies, deals, activities, tags, pipelines, stages, campaigns, and
+                  engagement events. It cannot be undone.
+                </p>
+              </CardContent>
+              <CardFooter className="justify-end">
+                <Button variant="destructive" onClick={resetAllData} disabled={loading} aria-label="Reset all data">
+                  {loading ? "Deleting…" : "Reset all data"}
+                </Button>
+              </CardFooter>
+            </Card>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="social" className="space-y-6">
+          <SocialOAuthManager />
+        </TabsContent>
+
+        <TabsContent value="content" className="space-y-6">
+          <ContentWorkflowManager />
+        </TabsContent>
+
+        <TabsContent value="admin" className="space-y-6">
+          {isAdmin ? (
+            <section id="admin">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Admin settings</CardTitle>
+                  <CardDescription>Platform controls for administrators.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Admin controls will appear here. We'll move agent, tools, and knowledge management into this section.
+                  </p>
+                </CardContent>
+              </Card>
+            </section>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Admin Access Required</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">You need admin privileges to access this section.</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </main>
   );
 };
 
 export default Settings;
-
