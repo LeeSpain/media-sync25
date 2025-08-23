@@ -2,7 +2,8 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Target, MessageSquare, TrendingUp, Zap, Users } from "lucide-react";
-
+import SEO from "@/components/SEO";
+import AgentManagement from "@/components/admin/agents/AgentManagement";
 const SalesAI = () => {
   const agents = [
     {
@@ -37,6 +38,12 @@ const SalesAI = () => {
 
   return (
     <div className="space-y-6">
+      {/* SEO */}
+      {/* Adding SEO for this page for better indexing */}
+      {/* Note: SEO component is lightweight and safe to use here */}
+      {/* @ts-ignore: component accepts title/description */}
+      <SEO title="Sales AI - Agent Management" description="Configure AI sales agents, instructions, models, and tools." canonical="/admin/sales-ai" />
+
       <div className="flex items-center gap-3">
         <Zap className="h-8 w-8 text-primary" />
         <div>
@@ -101,6 +108,9 @@ const SalesAI = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* New: Agent Management */}
+      <AgentManagement />
     </div>
   );
 };
