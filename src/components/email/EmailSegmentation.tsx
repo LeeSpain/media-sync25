@@ -377,7 +377,7 @@ export default function EmailSegmentation() {
                           <Badge variant="outline" className="text-xs">
                             {contact.job_title}
                           </Badge>
-                       ))}
+                        )}
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
@@ -393,7 +393,7 @@ export default function EmailSegmentation() {
                       </div>
                     </div>
                   </div>
-                )))}
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -511,3 +511,4 @@ export default function EmailSegmentation() {
       </div>
     </div>
   );
+}

@@ -144,9 +144,16 @@ export default function EmailCampaignManager() {
       const totalSubscribers = contactData?.length || 0;
       
       // Calculate average open rate
-      const campaignsWithStats = campaignData?.filter(c => c.statistics?.sent > 0) || [];
+      const campaignsWithStats = campaignData?.filter(c => 
+        typeof c.statistics === 'object' && c.statistics && 'sent' in c.statistics && 
+        typeof c.statistics.sent === 'number' && c.statistics.sent > 0
+      ) || [];
       const avgOpenRate = campaignsWithStats.length > 0 
-        ? campaignsWithStats.reduce((acc, c) => acc + (c.statistics?.open_rate || 0), 0) / campaignsWithStats.length
+        ? campaignsWithStats.reduce((acc, c) => {
+            const openRate = typeof c.statistics === 'object' && c.statistics && 'open_rate' in c.statistics && 
+              typeof c.statistics.open_rate === 'number' ? c.statistics.open_rate : 0;
+            return acc + openRate;
+          }, 0) / campaignsWithStats.length
         : 0;
 
       setOverviewStats({
@@ -230,7 +237,7 @@ export default function EmailCampaignManager() {
     try {
       const { error } = await supabase
         .from("email_campaigns")
-        .update({ status: newStatus })
+        .update({ status: newStatus as "draft" | "scheduled" | "sending" | "sent" | "paused" | "canceled" })
         .eq("id", campaignId);
 
       if (error) throw error;
