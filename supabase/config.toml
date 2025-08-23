@@ -6,8 +6,20 @@ verify_jwt = false
 [functions.video-create]
 verify_jwt = true
 
+[functions.scenes-generate]
+verify_jwt = false
+
+[functions.tts-elevenlabs]
+verify_jwt = true
+
 [functions.send-email-campaign]
 verify_jwt = true
 
 [functions.email-process-scheduled]
+verify_jwt = false
+
+[functions.publish-twitter]
+verify_jwt = true
+
+[functions.run-scheduler]
 verify_jwt = false

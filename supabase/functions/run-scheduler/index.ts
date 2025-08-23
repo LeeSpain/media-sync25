@@ -1,225 +1,194 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.54.0";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface ResultSummary {
-  processed: number;
-  successes: number;
-  failures: number;
-  details: Array<{ id: string; status: string; message?: string }>;
-}
-
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY");
-    if (!supabaseUrl || !supabaseKey) {
-      return new Response(
-        JSON.stringify({ error: "Missing SUPABASE env configuration" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    console.log('Running content scheduler...');
+
+    // Get content scheduled for now or earlier that hasn't been published
+    const now = new Date().toISOString();
+    const { data: scheduledContent, error: contentError } = await supabase
+      .from('content_schedule')
+      .select(`
+        *,
+        content_items(*),
+        connected_accounts(*)
+      `)
+      .eq('status', 'scheduled')
+      .lte('scheduled_for', now);
+
+    if (contentError) {
+      throw new Error(`Failed to get scheduled content: ${contentError.message}`);
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
-    });
+    console.log(`Found ${scheduledContent?.length || 0} items to publish`);
 
-    const {
-      data: { user },
-      error: userErr,
-    } = await supabase.auth.getUser();
+    let published = 0;
+    let failed = 0;
 
-    if (userErr || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
-
-    const nowIso = new Date().toISOString();
-
-    const { data: schedules, error: schErr } = await supabase
-      .from("content_schedule")
-      .select("id, content_id, channel, connected_account_id, scheduled_for, status")
-      .eq("status", "scheduled")
-      .lte("scheduled_for", nowIso)
-      .eq("created_by", user.id)
-      .order("scheduled_for", { ascending: true })
-      .limit(25);
-
-    if (schErr) throw schErr;
-
-    const summary: ResultSummary = { processed: 0, successes: 0, failures: 0, details: [] };
-
-    if (!schedules || schedules.length === 0) {
-      return new Response(
-        JSON.stringify({ ...summary, message: "No due schedules found" }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    for (const s of schedules) {
-      summary.processed += 1;
-      const scheduleId = s.id as string;
-
-      // Move schedule to processing to avoid duplicates
-      const { error: upErr } = await supabase
-        .from("content_schedule")
-        .update({ status: "processing" })
-        .eq("id", scheduleId);
-      if (upErr) {
-        console.error("Failed to mark schedule processing", scheduleId, upErr);
-      }
-
-      // Fetch content
-      const { data: contentItem, error: contentErr } = await supabase
-        .from("content_items")
-        .select("id, content, channel")
-        .eq("id", s.content_id)
-        .eq("created_by", user.id)
-        .single();
-
-      if (contentErr || !contentItem?.content) {
-        await supabase
-          .from("content_schedule")
-          .update({ status: "failed", publish_result: { error: "Content not found" } })
-          .eq("id", scheduleId);
-        await supabase.from("publish_jobs").insert({
-          provider: null,
-          created_by: user.id,
-          schedule_id: scheduleId,
-          content_id: s.content_id,
-          status: "failed",
-          error: "Content not found",
-          response: {},
-        });
-        summary.failures += 1;
-        summary.details.push({ id: scheduleId, status: "failed", message: "Content not found" });
-        continue;
-      }
-
-      // Fetch connected account
-      const { data: account, error: accErr } = await supabase
-        .from("connected_accounts")
-        .select("id, provider, status, account_name")
-        .eq("id", s.connected_account_id)
-        .eq("created_by", user.id)
-        .single();
-
-      if (accErr || !account || account.status === "disconnected") {
-        await supabase
-          .from("content_schedule")
-          .update({ status: "failed", publish_result: { error: "No connected account" } })
-          .eq("id", scheduleId);
-        await supabase.from("publish_jobs").insert({
-          provider: account?.provider ?? null,
-          created_by: user.id,
-          schedule_id: scheduleId,
-          content_id: s.content_id,
-          status: "failed",
-          error: "No connected account",
-          response: {},
-        });
-        summary.failures += 1;
-        summary.details.push({ id: scheduleId, status: "failed", message: "No connected account" });
-        continue;
-      }
-
-      if (account.provider !== "twitter") {
-        await supabase
-          .from("content_schedule")
-          .update({ status: "failed", publish_result: { error: `Provider ${account.provider} not supported yet` } })
-          .eq("id", scheduleId);
-        await supabase.from("publish_jobs").insert({
-          provider: account.provider,
-          created_by: user.id,
-          schedule_id: scheduleId,
-          content_id: s.content_id,
-          status: "failed",
-          error: `Provider ${account.provider} not supported yet` ,
-          response: {},
-        });
-        summary.failures += 1;
-        summary.details.push({ id: scheduleId, status: "failed", message: `Provider ${account.provider} not supported yet` });
-        continue;
-      }
-
-      // Create a job in queued state
-      const { data: jobRow, error: jobErr } = await supabase
-        .from("publish_jobs")
-        .insert({
-          provider: account.provider,
-          created_by: user.id,
-          schedule_id: scheduleId,
-          content_id: s.content_id,
-          status: "queued",
-          response: {},
-        })
-        .select("id")
-        .single();
-
-      if (jobErr) {
-        console.error("Failed to create job", jobErr);
-      }
-
-      // Attempt to publish via existing function; will fail now without keys, but path is wired
-      const text = contentItem.content as string;
-      let publishOk = false;
-      let publishResp: any = {};
-      let publishErrMsg: string | undefined;
+    for (const scheduleItem of scheduledContent || []) {
       try {
-        const { data, error } = await supabase.functions.invoke("publish-twitter", {
-          body: { text },
-        });
-        if (error) throw error;
-        publishOk = !!data?.success;
-        publishResp = data ?? {};
-      } catch (err: any) {
-        publishOk = false;
-        publishErrMsg = err?.message ?? "Publish error";
-      }
+        console.log(`Publishing content: ${scheduleItem.content_items?.title} to ${scheduleItem.channel}`);
 
-      if (publishOk) {
+        // Update schedule status to publishing
         await supabase
-          .from("publish_jobs")
-          .update({ status: "completed", response: publishResp })
-          .eq("id", jobRow?.id);
+          .from('content_schedule')
+          .update({ status: 'publishing' })
+          .eq('id', scheduleItem.id);
+
+        let publishResult;
+
+        // Route to appropriate publisher based on channel
+        switch (scheduleItem.channel) {
+          case 'twitter':
+            publishResult = await supabase.functions.invoke('publish-twitter', {
+              body: {
+                contentId: scheduleItem.content_id,
+                tweet: scheduleItem.content_items?.content || '',
+              },
+              headers: {
+                Authorization: `Bearer ${supabaseKey}`
+              }
+            });
+            break;
+
+          case 'linkedin':
+            // LinkedIn publishing would go here
+            console.log('LinkedIn publishing not yet implemented');
+            publishResult = { error: 'LinkedIn publishing not yet implemented' };
+            break;
+
+          case 'facebook':
+            // Facebook publishing would go here  
+            console.log('Facebook publishing not yet implemented');
+            publishResult = { error: 'Facebook publishing not yet implemented' };
+            break;
+
+          case 'instagram':
+            // Instagram publishing would go here
+            console.log('Instagram publishing not yet implemented');
+            publishResult = { error: 'Instagram publishing not yet implemented' };
+            break;
+
+          default:
+            throw new Error(`Unsupported channel: ${scheduleItem.channel}`);
+        }
+
+        if (publishResult?.error) {
+          throw new Error(`Publish failed: ${publishResult.error.message || publishResult.error}`);
+        }
+
+        // Update schedule status to published
         await supabase
-          .from("content_schedule")
-          .update({ status: "completed", publish_result: publishResp })
-          .eq("id", scheduleId);
-        summary.successes += 1;
-        summary.details.push({ id: scheduleId, status: "completed" });
-      } else {
-        await supabase
-          .from("publish_jobs")
-          .update({ status: "failed", error: publishErrMsg ?? "Unknown error", response: publishResp })
-          .eq("id", jobRow?.id);
-        await supabase
-          .from("content_schedule")
-          .update({ status: "failed", publish_result: { error: publishErrMsg ?? "Unknown error", response: publishResp } })
-          .eq("id", scheduleId);
-        summary.failures += 1;
-        summary.details.push({ id: scheduleId, status: "failed", message: publishErrMsg ?? "Unknown error" });
+          .from('content_schedule')
+          .update({ 
+            status: 'published',
+            publish_result: publishResult?.data || publishResult
+          })
+          .eq('id', scheduleItem.id);
+
+        published++;
+        console.log(`Successfully published to ${scheduleItem.channel}`);
+
+      } catch (error) {
+        console.error(`Failed to publish content ${scheduleItem.id}:`, error);
+        failed++;
+
+        // Update schedule status to failed
+        try {
+          await supabase
+            .from('content_schedule')
+            .update({ 
+              status: 'failed',
+              publish_result: { 
+                error: error.message,
+                failed_at: new Date().toISOString()
+              }
+            })
+            .eq('id', scheduleItem.id);
+        } catch (updateError) {
+          console.error(`Failed to update schedule status:`, updateError);
+        }
       }
     }
 
-    return new Response(JSON.stringify(summary), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+    // Also check for auto-mode businesses that need content generation
+    const { data: autoBusinesses, error: businessError } = await supabase
+      .from('businesses')
+      .select('*')
+      .eq('auto_mode', true);
+
+    if (!businessError && autoBusinesses) {
+      console.log(`Found ${autoBusinesses.length} auto-mode businesses`);
+
+      for (const business of autoBusinesses) {
+        try {
+          // Check if business needs new content (e.g., hasn't posted in 24 hours)
+          const { data: recentContent } = await supabase
+            .from('content_queue')
+            .select('*')
+            .eq('business_id', business.id)
+            .eq('status', 'published')
+            .gte('published_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+            .limit(1);
+
+          if (!recentContent || recentContent.length === 0) {
+            console.log(`Triggering content generation for business: ${business.name}`);
+            
+            // Trigger master agent to generate new content
+            await supabase.functions.invoke('master-agent', {
+              body: {
+                businessId: business.id,
+                action: 'orchestrate',
+                data: {
+                  contentType: ['post'],
+                  platforms: ['twitter', 'linkedin'],
+                  autoMode: true
+                }
+              },
+              headers: {
+                Authorization: `Bearer ${supabaseKey}`
+              }
+            });
+          }
+
+        } catch (error) {
+          console.error(`Failed to check auto-mode for business ${business.id}:`, error);
+        }
+      }
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      published,
+      failed,
+      message: `Published ${published} items, ${failed} failed`
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (error: any) {
-    console.error("run-scheduler error", error);
-    return new Response(JSON.stringify({ error: error?.message ?? String(error) }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+
+  } catch (error) {
+    console.error('Error in run-scheduler:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });

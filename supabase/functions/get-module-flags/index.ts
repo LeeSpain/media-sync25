@@ -1,87 +1,63 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function getEnv(name: string): string {
-  const v = Deno.env.get(name);
-  if (!v) throw new Error(`Missing required env: ${name}`);
-  return v;
-}
-
-Deno.serve(async (req) => {
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const SUPABASE_URL = getEnv('SUPABASE_URL');
-    const SERVICE_ROLE = getEnv('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
-      global: { headers: { Authorization: `Bearer ${SERVICE_ROLE}` } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
-    // Keys we want to expose publicly (read-only)
-    const keys = [
-      'module_crm',
-      'module_planner',
-      'module_content',
-      'module_social',
-      'module_email',
-      'module_messages',
-      'module_analytics',
-      'module_social_twitter',
-      'module_social_linkedin',
-      'module_social_meta',
-      'module_social_scheduler',
-    ];
-
-    const { data, error } = await supabase
+    // Get module flags from platform_settings
+    const { data: settings, error } = await supabase
       .from('platform_settings')
-      .select('key, value, created_at')
-      .in('key', keys)
-      .order('created_at', { ascending: false });
+      .select('*');
 
-    if (error) throw error;
-
-    const defaults: Record<string, any> = {
-      module_crm: { enabled: true },
-      module_planner: { enabled: true },
-      module_content: { enabled: true },
-      module_social: { enabled: true },
-      module_email: { enabled: true },
-      module_messages: { enabled: true },
-      module_analytics: { enabled: true },
-      module_social_twitter: { enabled: true },
-      module_social_linkedin: { enabled: true },
-      module_social_meta: { enabled: true },
-      module_social_scheduler: { enabled: true },
-    };
-
-    const latestByKey: Record<string, any> = {};
-    for (const k of keys) latestByKey[k] = defaults[k];
-
-    for (const row of data ?? []) {
-      if (!(row.key in latestByKey)) continue;
-      if (!latestByKey[row.key]) latestByKey[row.key] = row.value ?? { enabled: true };
-      // Only set if not set yet (first occurrence due to DESC order)
-      if (latestByKey[row.key] === defaults[row.key]) {
-        latestByKey[row.key] = (row as any).value ?? defaults[row.key];
-      }
+    if (error) {
+      console.error('Error fetching module flags:', error);
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    return new Response(JSON.stringify({ flags: latestByKey }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    // Convert settings array to object with default flags
+    const moduleFlags = {
+      crm_enabled: true,
+      social_enabled: true,
+      email_enabled: true,
+      video_enabled: true,
+      analytics_enabled: true,
+      ai_agents_enabled: true,
+      content_library_enabled: true,
+      onboarding_enabled: true,
+      ...settings.reduce((acc: any, setting: any) => {
+        acc[setting.key] = setting.value;
+        return acc;
+      }, {})
+    };
+
+    return new Response(JSON.stringify({ moduleFlags }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (e: any) {
-    console.error('get-module-flags error', e);
-    return new Response(JSON.stringify({ error: e?.message ?? 'Unknown error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    });
+
+  } catch (error) {
+    console.error('Error in get-module-flags:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });
