@@ -1987,24 +1987,36 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accessibility_settings: Json | null
           avatar_url: string | null
           created_at: string
           display_name: string | null
           id: string
+          mobile_preferences: Json | null
+          onboarding_completed: boolean | null
+          tutorial_progress: Json | null
           updated_at: string
         }
         Insert: {
+          accessibility_settings?: Json | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           id: string
+          mobile_preferences?: Json | null
+          onboarding_completed?: boolean | null
+          tutorial_progress?: Json | null
           updated_at?: string
         }
         Update: {
+          accessibility_settings?: Json | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
+          mobile_preferences?: Json | null
+          onboarding_completed?: boolean | null
+          tutorial_progress?: Json | null
           updated_at?: string
         }
         Relationships: []

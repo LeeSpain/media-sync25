@@ -206,7 +206,7 @@ export default function InteractiveTutorials({ isOpen, onClose }: InteractiveTut
         .eq("id", user.id)
         .single();
 
-      if (profile?.tutorial_progress) {
+      if (profile?.tutorial_progress && Array.isArray(profile.tutorial_progress)) {
         setCompletedTutorials(profile.tutorial_progress as string[]);
       }
     } catch (error) {

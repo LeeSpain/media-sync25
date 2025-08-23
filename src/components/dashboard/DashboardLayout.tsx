@@ -1,12 +1,22 @@
-import { Outlet } from "react-router-dom";
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AppSidebar from "./AppSidebar";
 import DashboardTopBar from "./DashboardTopBar";
+import MobileOptimizedNavigation from "@/components/mobile/MobileOptimizedNavigation";
+import InteractiveTutorials from "@/components/onboarding/InteractiveTutorials";
 import BusinessOnboardingModal from "@/components/onboarding/BusinessOnboardingModal";
-const DashboardLayout = () => {
+import { Button } from "@/components/ui/button";
+import { HelpCircle } from "lucide-react";
+
+export default function DashboardLayout() {
+  const location = useLocation();
+  const [showTutorials, setShowTutorials] = useState(false);
+
   // One-time post-confirmation finalization of pending registration data
   useEffect(() => {
     const run = async () => {
@@ -73,22 +83,55 @@ const DashboardLayout = () => {
     };
     run();
   }, []);
+
   return (
-    <SidebarProvider>
-      <div className="min-h-screen w-full flex">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col">
-          <DashboardTopBar />
-          <div className="flex-1">
-            <section className="p-4 md:p-6">
+    <TooltipProvider>
+      <SidebarProvider>
+        <div className="flex h-screen w-full bg-background">
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block">
+            <AppSidebar />
+          </div>
+          
+          {/* Mobile Navigation */}
+          <MobileOptimizedNavigation currentPath={location.pathname} />
+          
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Desktop Top Bar */}
+            <div className="hidden lg:block">
+              <DashboardTopBar />
+            </div>
+            
+            {/* Page Content */}
+            <main className="flex-1 overflow-auto p-4 lg:p-6 pb-20 lg:pb-6">
               <Outlet />
-            </section>
+            </main>
           </div>
         </div>
-      </div>
-      <BusinessOnboardingModal />
-    </SidebarProvider>
-  );
-};
 
-export default DashboardLayout;
+        {/* Floating Help Button */}
+        <div className="fixed bottom-6 right-6 z-40 lg:bottom-8 lg:right-8">
+          <Button
+            onClick={() => setShowTutorials(true)}
+            className="floating-action-button rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90"
+            size="sm"
+          >
+            <HelpCircle className="h-6 w-6" />
+          </Button>
+        </div>
+
+        {/* Interactive Tutorials */}
+        <InteractiveTutorials 
+          isOpen={showTutorials} 
+          onClose={() => setShowTutorials(false)} 
+        />
+
+        {/* Business Onboarding Modal */}
+        <BusinessOnboardingModal />
+        
+        <Toaster />
+      </SidebarProvider>
+    </TooltipProvider>
+  );
+}

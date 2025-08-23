@@ -1,0 +1,26 @@
+{
+  "appId": "app.lovable.ee330bc4ed944f2aa9f42423be7ab74e",
+  "appName": "media-sync25",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://ee330bc4-ed94-4f2a-a9f4-2423be7ab74e.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#ffffff",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DEFAULT",
+      "backgroundColor": "#ffffff"
+    },
+    "Keyboard": {
+      "resize": "native"
+    }
+  }
+}
