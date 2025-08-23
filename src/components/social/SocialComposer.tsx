@@ -25,6 +25,8 @@ export default function SocialComposer() {
 
   const [hasConnection, setHasConnection] = useState<boolean>(false);
   const [connLoading, setConnLoading] = useState<boolean>(true);
+  const [connectedAccountId, setConnectedAccountId] = useState<string>("");
+  const [accountName, setAccountName] = useState<string>("");
 
   useEffect(() => {
     let active = true;
@@ -40,18 +42,29 @@ export default function SocialComposer() {
         setConnLoading(true);
         const { data, error } = await supabase
           .from("connected_accounts")
-          .select("id, status, created_at")
+          .select("id, status, account_name, created_at")
           .eq("provider", platform)
           .eq("created_by", user.id)
+          .eq("status", "connected")
           .order("created_at", { ascending: false })
           .limit(1);
         if (!active) return;
         if (error) {
           console.warn("Failed to load connection", error);
           setHasConnection(false);
+          setConnectedAccountId("");
+          setAccountName("");
         } else {
           const row = (data ?? [])[0];
-          setHasConnection(!!row && row.status !== "disconnected");
+          const isConnected = !!row;
+          setHasConnection(isConnected);
+          if (isConnected) {
+            setConnectedAccountId(row.id);
+            setAccountName(row.account_name || "Connected Account");
+          } else {
+            setConnectedAccountId("");
+            setAccountName("");
+          }
         }
       } finally {
         if (active) setConnLoading(false);
@@ -75,8 +88,15 @@ export default function SocialComposer() {
       const fullText = hashtags.trim() ? `${text.trim()}\n\n${hashtags.trim()}` : text.trim();
 
       if (platform === "twitter") {
+        if (!connectedAccountId) {
+          throw new Error("No connected Twitter account found");
+        }
+        
         const { data, error } = await supabase.functions.invoke("publish-twitter", {
-          body: { text: fullText },
+          body: { 
+            tweet: fullText, 
+            connectedAccountId: connectedAccountId
+          },
         });
 
         if (error) throw error;
@@ -93,7 +113,10 @@ export default function SocialComposer() {
         if (insertErr) console.warn("publish_jobs insert warning", insertErr);
 
         if (data?.success) {
-          toast({ title: "Published on X / Twitter", description: data?.url ?? "Post created." });
+          toast({ 
+            title: `Published to ${accountName}`, 
+            description: `Successfully posted to your Twitter account: ${accountName}` 
+          });
           setText("");
           setHashtags("");
         } else {
@@ -156,6 +179,11 @@ export default function SocialComposer() {
           <Button onClick={onPublish} disabled={disabled}>
             {loading ? "Publishing..." : "Publish now"}
           </Button>
+          {hasConnection && accountName && (
+            <p className="text-sm text-muted-foreground">
+              Publishing to: <span className="font-medium">{accountName}</span>
+            </p>
+          )}
           {!hasConnection && !connLoading && (
             <p className="text-sm text-muted-foreground">
               Connect your {platforms.find((p) => p.value === platform)?.label} account in Settings before publishing.

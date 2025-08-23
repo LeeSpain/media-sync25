@@ -12,6 +12,7 @@ interface PublishTwitterRequest {
   contentId?: string;
   tweet: string;
   mediaUrls?: string[];
+  connectedAccountId: string;
 }
 
 // Twitter OAuth 1.0a implementation
@@ -38,11 +39,14 @@ function generateOAuthSignature(
   return signature;
 }
 
-function generateOAuthHeader(method: string, url: string): string {
+function generateOAuthHeader(
+  method: string, 
+  url: string, 
+  accessToken: string, 
+  accessTokenSecret: string
+): string {
   const consumerKey = Deno.env.get("TWITTER_CONSUMER_KEY")!;
-  const consumerSecret = Deno.env.get("TWITTER_CONSUMER_SECRET")!;
-  const accessToken = Deno.env.get("TWITTER_ACCESS_TOKEN")!;
-  const accessTokenSecret = Deno.env.get("TWITTER_ACCESS_TOKEN_SECRET")!;
+  const consumerSecret = Deno.env.get("TWITTER_CONSUMER_SECRET")!
 
   const oauthParams = {
     oauth_consumer_key: consumerKey,
@@ -57,7 +61,7 @@ function generateOAuthHeader(method: string, url: string): string {
     method,
     url,
     oauthParams,
-    consumerSecret,
+    consumerSecret!,
     accessTokenSecret
   );
 
@@ -75,10 +79,10 @@ function generateOAuthHeader(method: string, url: string): string {
   );
 }
 
-async function sendTweet(tweetText: string): Promise<any> {
+async function sendTweet(tweetText: string, accessToken: string, accessTokenSecret: string): Promise<any> {
   const url = "https://api.x.com/2/tweets";
   const method = "POST";
-  const oauthHeader = generateOAuthHeader(method, url);
+  const oauthHeader = generateOAuthHeader(method, url, accessToken, accessTokenSecret);
 
   const response = await fetch(url, {
     method: method,
@@ -108,15 +112,15 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Validate Twitter credentials
-    const requiredKeys = ['TWITTER_CONSUMER_KEY', 'TWITTER_CONSUMER_SECRET', 'TWITTER_ACCESS_TOKEN', 'TWITTER_ACCESS_TOKEN_SECRET'];
+    // Validate Twitter app credentials
+    const requiredKeys = ['TWITTER_CONSUMER_KEY', 'TWITTER_CONSUMER_SECRET'];
     for (const key of requiredKeys) {
       if (!Deno.env.get(key)) {
         throw new Error(`Missing required environment variable: ${key}`);
       }
     }
 
-    const { contentId, tweet, mediaUrls }: PublishTwitterRequest = await req.json();
+    const { contentId, tweet, mediaUrls, connectedAccountId }: PublishTwitterRequest = await req.json();
 
     // Get user from auth header
     const authHeader = req.headers.get('authorization');
@@ -132,10 +136,31 @@ serve(async (req) => {
       throw new Error('Invalid authentication');
     }
 
-    console.log(`Publishing tweet: ${tweet.substring(0, 50)}...`);
+    // Get user's connected Twitter account
+    const { data: connectedAccount, error: accountError } = await supabase
+      .from('connected_accounts')
+      .select('access_token, refresh_token, account_name, status')
+      .eq('id', connectedAccountId)
+      .eq('created_by', user.id)
+      .eq('provider', 'twitter')
+      .single();
 
-    // Send tweet to Twitter
-    const twitterResponse = await sendTweet(tweet);
+    if (accountError || !connectedAccount) {
+      throw new Error('Twitter account not found or not connected');
+    }
+
+    if (connectedAccount.status !== 'connected') {
+      throw new Error('Twitter account is not in connected status');
+    }
+
+    if (!connectedAccount.access_token || !connectedAccount.refresh_token) {
+      throw new Error('Twitter account tokens are missing');
+    }
+
+    console.log(`Publishing tweet for account ${connectedAccount.account_name}: ${tweet.substring(0, 50)}...`);
+
+    // Send tweet to Twitter using user's tokens
+    const twitterResponse = await sendTweet(tweet, connectedAccount.access_token, connectedAccount.refresh_token);
     console.log('Tweet published successfully:', twitterResponse);
 
     // Create publish job record
