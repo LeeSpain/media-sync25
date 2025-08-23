@@ -1,11 +1,14 @@
 import { useState } from "react";
 import SEO from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ProfileSection from "@/components/settings/ProfileSection";
 import OnboardingSummary from "@/components/settings/OnboardingSummary";
+import SocialOAuthManager from "@/components/social/SocialOAuthManager";
+import ContentWorkflowManager from "@/components/content/ContentWorkflowManager";
 import { useAdmin } from "@/hooks/useAdmin";
 
 const Settings = () => {
