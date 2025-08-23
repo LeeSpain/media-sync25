@@ -17,167 +17,157 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Running content scheduler...');
+    let publishedCount = 0;
+    let failedCount = 0;
+    const failures: any[] = [];
 
-    // Get content scheduled for now or earlier that hasn't been published
-    const now = new Date().toISOString();
-    const { data: scheduledContent, error: contentError } = await supabase
+    console.log('Checking for scheduled content...');
+    
+    const { data: scheduledContent, error: scheduleError } = await supabase
       .from('content_schedule')
       .select(`
         *,
-        content_items(*),
-        connected_accounts(*)
+        content_items(*)
       `)
       .eq('status', 'scheduled')
-      .lte('scheduled_for', now);
+      .lte('scheduled_for', new Date().toISOString());
 
-    if (contentError) {
-      throw new Error(`Failed to get scheduled content: ${contentError.message}`);
-    }
+    if (scheduleError) {
+      console.error('Error fetching scheduled content:', scheduleError);
+    } else if (scheduledContent && scheduledContent.length > 0) {
+      console.log(`Found ${scheduledContent.length} items to publish`);
 
-    console.log(`Found ${scheduledContent?.length || 0} items to publish`);
+      for (const item of scheduledContent) {
+        try {
+          await supabase
+            .from('content_schedule')
+            .update({ status: 'publishing' })
+            .eq('id', item.id);
 
-    let published = 0;
-    let failed = 0;
-
-    for (const scheduleItem of scheduledContent || []) {
-      try {
-        console.log(`Publishing content: ${scheduleItem.content_items?.title} to ${scheduleItem.channel}`);
-
-        // Update schedule status to publishing
-        await supabase
-          .from('content_schedule')
-          .update({ status: 'publishing' })
-          .eq('id', scheduleItem.id);
-
-        let publishResult;
-
-        // Route to appropriate publisher based on channel
-        switch (scheduleItem.channel) {
-          case 'twitter':
-            publishResult = await supabase.functions.invoke('publish-twitter', {
+          if (item.channel === 'twitter') {
+            const { error: publishError } = await supabase.functions.invoke('publish-twitter', {
               body: {
-                contentId: scheduleItem.content_id,
-                tweet: scheduleItem.content_items?.content || '',
-              },
-              headers: {
-                Authorization: `Bearer ${supabaseKey}`
+                content: item.content_items.content,
+                contentId: item.content_id
               }
             });
-            break;
 
-          case 'linkedin':
-            // LinkedIn publishing would go here
-            console.log('LinkedIn publishing not yet implemented');
-            publishResult = { error: 'LinkedIn publishing not yet implemented' };
-            break;
+            if (publishError) {
+              throw publishError;
+            }
 
-          case 'facebook':
-            // Facebook publishing would go here  
-            console.log('Facebook publishing not yet implemented');
-            publishResult = { error: 'Facebook publishing not yet implemented' };
-            break;
+            await supabase
+              .from('content_schedule')
+              .update({ 
+                status: 'published',
+                publish_result: { published_at: new Date().toISOString() }
+              })
+              .eq('id', item.id);
 
-          case 'instagram':
-            // Instagram publishing would go here
-            console.log('Instagram publishing not yet implemented');
-            publishResult = { error: 'Instagram publishing not yet implemented' };
-            break;
-
-          default:
-            throw new Error(`Unsupported channel: ${scheduleItem.channel}`);
-        }
-
-        if (publishResult?.error) {
-          throw new Error(`Publish failed: ${publishResult.error.message || publishResult.error}`);
-        }
-
-        // Update schedule status to published
-        await supabase
-          .from('content_schedule')
-          .update({ 
-            status: 'published',
-            publish_result: publishResult?.data || publishResult
-          })
-          .eq('id', scheduleItem.id);
-
-        published++;
-        console.log(`Successfully published to ${scheduleItem.channel}`);
-
-      } catch (error) {
-        console.error(`Failed to publish content ${scheduleItem.id}:`, error);
-        failed++;
-
-        // Update schedule status to failed
-        try {
+            publishedCount++;
+            console.log(`Published content ${item.id} to Twitter`);
+          } else {
+            throw new Error(`Unsupported channel: ${item.channel}`);
+          }
+        } catch (error) {
+          console.error(`Failed to publish content ${item.id}:`, error);
+          
           await supabase
             .from('content_schedule')
             .update({ 
               status: 'failed',
-              publish_result: { 
-                error: error.message,
-                failed_at: new Date().toISOString()
-              }
+              publish_result: { error: error.message, failed_at: new Date().toISOString() }
             })
-            .eq('id', scheduleItem.id);
-        } catch (updateError) {
-          console.error(`Failed to update schedule status:`, updateError);
+            .eq('id', item.id);
+
+          failedCount++;
+          failures.push({
+            contentId: item.id,
+            error: error.message
+          });
         }
       }
     }
 
-    // Also check for auto-mode businesses that need content generation
+    console.log('Checking for auto-mode businesses...');
+    
     const { data: autoBusinesses, error: businessError } = await supabase
       .from('businesses')
       .select('*')
       .eq('auto_mode', true);
 
-    if (!businessError && autoBusinesses) {
+    if (businessError) {
+      console.error('Error fetching auto-mode businesses:', businessError);
+    } else if (autoBusinesses && autoBusinesses.length > 0) {
       console.log(`Found ${autoBusinesses.length} auto-mode businesses`);
 
       for (const business of autoBusinesses) {
         try {
-          // Check if business needs new content (e.g., hasn't posted in 24 hours)
-          const { data: recentContent } = await supabase
+          const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+          
+          const { data: recentContent, error: contentError } = await supabase
             .from('content_queue')
             .select('*')
             .eq('business_id', business.id)
             .eq('status', 'published')
-            .gte('published_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-            .limit(1);
+            .gte('published_at', twentyFourHoursAgo);
 
-          if (!recentContent || recentContent.length === 0) {
-            console.log(`Triggering content generation for business: ${business.name}`);
-            
-            // Trigger master agent to generate new content
-            await supabase.functions.invoke('master-agent', {
-              body: {
-                businessId: business.id,
-                action: 'orchestrate',
-                data: {
-                  contentType: ['post'],
-                  platforms: ['twitter', 'linkedin'],
-                  autoMode: true
-                }
-              },
-              headers: {
-                Authorization: `Bearer ${supabaseKey}`
-              }
-            });
+          if (contentError) {
+            console.error(`Error checking recent content for business ${business.id}:`, contentError);
+            continue;
           }
 
+          if (!recentContent || recentContent.length === 0) {
+            console.log(`Triggering content generation for business ${business.id}`);
+            
+            const { error: agentError } = await supabase.functions.invoke('master-agent', {
+              body: {
+                businessId: business.id,
+                action: 'orchestrateAgents',
+                orchestrationData: {
+                  contentType: 'social_post',
+                  platforms: ['twitter'],
+                  autoMode: true
+                }
+              }
+            });
+
+            if (agentError) {
+              console.error(`Failed to trigger content generation for business ${business.id}:`, agentError);
+              failures.push({
+                businessId: business.id,
+                error: agentError.message
+              });
+            } else {
+              console.log(`Successfully triggered content generation for business ${business.id}`);
+            }
+          } else {
+            console.log(`Business ${business.id} has recent content, skipping`);
+          }
         } catch (error) {
-          console.error(`Failed to check auto-mode for business ${business.id}:`, error);
+          console.error(`Error processing auto-mode business ${business.id}:`, error);
+          failures.push({
+            businessId: business.id,
+            error: error.message
+          });
         }
       }
     }
 
-    return new Response(JSON.stringify({
+    const response = {
       success: true,
-      published,
-      failed,
-      message: `Published ${published} items, ${failed} failed`
-    }), {
+      message: 'Scheduler run completed',
+      statistics: {
+        content_published: publishedCount,
+        content_failed: failedCount,
+        auto_businesses_processed: autoBusinesses?.length || 0
+      },
+      failures: failures.length > 0 ? failures : undefined
+    };
+
+    console.log('Scheduler completed:', response);
+
+    return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

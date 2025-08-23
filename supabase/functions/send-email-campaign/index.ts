@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { Resend } from "npm:resend@2.0.0";
+import { Resend } from 'npm:resend@4.0.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,192 +22,181 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const resendKey = Deno.env.get('RESEND_API_KEY')!;
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
     const resend = new Resend(resendKey);
 
-    const { campaignId, testEmail }: SendCampaignRequest = await req.json();
-
-    // Get user from auth header
-    const authHeader = req.headers.get('authorization');
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Authorization header required');
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
+    const { campaignId, testEmail }: SendCampaignRequest = await req.json();
 
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (authError || !user) {
-      throw new Error('Invalid authentication');
+      throw new Error('Authentication failed');
     }
 
-    // Get campaign details
     const { data: campaign, error: campaignError } = await supabase
       .from('email_campaigns')
       .select('*')
       .eq('id', campaignId)
+      .eq('created_by', user.id)
       .single();
 
     if (campaignError || !campaign) {
-      throw new Error('Campaign not found');
+      throw new Error('Campaign not found or access denied');
     }
-
-    // Verify user owns the campaign
-    if (campaign.created_by !== user.id) {
-      throw new Error('Unauthorized to send this campaign');
-    }
-
-    let emailsSent = 0;
-    let emailsFailed = 0;
 
     if (testEmail) {
-      // Send test email
       try {
-        const emailResponse = await resend.emails.send({
+        const { error: sendError } = await resend.emails.send({
           from: campaign.from_address || 'noreply@yourdomain.com',
           to: [testEmail],
           subject: `[TEST] ${campaign.subject}`,
           html: campaign.html,
-          text: campaign.text || undefined,
+          text: campaign.text,
         });
 
-        console.log('Test email sent:', emailResponse);
-        emailsSent = 1;
+        if (sendError) {
+          throw sendError;
+        }
 
-        // Log test email event
-        await supabase
-          .from('email_events')
-          .insert({
-            campaign_id: campaignId,
-            created_by: user.id,
-            event_type: 'sent',
-            payload: { 
-              test_email: testEmail,
-              message_id: emailResponse.data?.id 
-            }
-          });
-
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'Test email sent successfully'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       } catch (error) {
-        console.error('Failed to send test email:', error);
-        emailsFailed = 1;
+        throw new Error(`Failed to send test email: ${error.message}`);
       }
+    }
 
-    } else {
-      // Send to campaign recipients
-      const { data: recipients, error: recipientsError } = await supabase
-        .from('email_recipients')
-        .select('*')
-        .eq('campaign_id', campaignId)
-        .eq('status', 'queued');
+    const { data: recipients, error: recipientsError } = await supabase
+      .from('email_recipients')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .eq('status', 'queued');
 
-      if (recipientsError) {
-        throw new Error('Failed to get recipients');
-      }
+    if (recipientsError) {
+      throw new Error(`Failed to fetch recipients: ${recipientsError.message}`);
+    }
 
-      // Process recipients in batches
-      const batchSize = 10;
-      for (let i = 0; i < recipients.length; i += batchSize) {
-        const batch = recipients.slice(i, i + batchSize);
-        
-        for (const recipient of batch) {
-          try {
-            // Get variant content if A/B testing
-            let subject = campaign.subject;
-            let html = campaign.html;
-            let text = campaign.text;
+    if (!recipients || recipients.length === 0) {
+      throw new Error('No recipients found for this campaign');
+    }
 
-            if (recipient.variant_key) {
-              const { data: variant } = await supabase
-                .from('email_campaign_variants')
-                .select('*')
-                .eq('campaign_id', campaignId)
-                .eq('variant_key', recipient.variant_key)
-                .single();
+    const { data: variants, error: variantsError } = await supabase
+      .from('email_campaign_variants')
+      .select('*')
+      .eq('campaign_id', campaignId);
 
-              if (variant) {
-                subject = variant.subject || subject;
-                html = variant.html || html;
-                text = variant.text || text;
-              }
+    const hasVariants = variants && variants.length > 0;
+    const batchSize = 50;
+    let successCount = 0;
+    let failureCount = 0;
+
+    for (let i = 0; i < recipients.length; i += batchSize) {
+      const batch = recipients.slice(i, i + batchSize);
+      
+      await Promise.all(batch.map(async (recipient) => {
+        try {
+          await supabase
+            .from('email_recipients')
+            .update({ status: 'sending' })
+            .eq('id', recipient.id);
+
+          let emailContent = {
+            subject: campaign.subject,
+            html: campaign.html,
+            text: campaign.text
+          };
+
+          if (hasVariants && recipient.variant_key) {
+            const variant = variants.find(v => v.variant_key === recipient.variant_key);
+            if (variant) {
+              emailContent = {
+                subject: variant.subject || campaign.subject,
+                html: variant.html || campaign.html,
+                text: variant.text || campaign.text
+              };
             }
-
-            const emailResponse = await resend.emails.send({
-              from: campaign.from_address || 'noreply@yourdomain.com',
-              to: [recipient.email_address],
-              subject: subject,
-              html: html,
-              text: text || undefined,
-            });
-
-            // Update recipient status
-            await supabase
-              .from('email_recipients')
-              .update({
-                status: 'sent',
-                message_id: emailResponse.data?.id,
-                last_event_at: new Date().toISOString()
-              })
-              .eq('id', recipient.id);
-
-            // Log send event
-            await supabase
-              .from('email_events')
-              .insert({
-                campaign_id: campaignId,
-                recipient_id: recipient.id,
-                created_by: user.id,
-                event_type: 'sent',
-                payload: { 
-                  message_id: emailResponse.data?.id,
-                  variant_key: recipient.variant_key
-                }
-              });
-
-            emailsSent++;
-            console.log(`Email sent to ${recipient.email_address}`);
-
-          } catch (error) {
-            console.error(`Failed to send email to ${recipient.email_address}:`, error);
-            emailsFailed++;
-
-            // Update recipient with error
-            await supabase
-              .from('email_recipients')
-              .update({
-                status: 'failed',
-                error: error.message,
-                last_event_at: new Date().toISOString()
-              })
-              .eq('id', recipient.id);
           }
 
-          // Small delay to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 100));
+          const { data: emailData, error: sendError } = await resend.emails.send({
+            from: campaign.from_address || 'noreply@yourdomain.com',
+            to: [recipient.email_address],
+            subject: emailContent.subject,
+            html: emailContent.html,
+            text: emailContent.text,
+          });
+
+          if (sendError) {
+            throw sendError;
+          }
+
+          await supabase
+            .from('email_recipients')
+            .update({ 
+              status: 'sent',
+              message_id: emailData?.id || null,
+              last_event_at: new Date().toISOString()
+            })
+            .eq('id', recipient.id);
+
+          await supabase
+            .from('email_events')
+            .insert({
+              campaign_id: campaignId,
+              recipient_id: recipient.id,
+              event_type: 'sent',
+              created_by: user.id,
+              payload: { message_id: emailData?.id }
+            });
+
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to send email to ${recipient.email_address}:`, error);
+          
+          await supabase
+            .from('email_recipients')
+            .update({ 
+              status: 'failed',
+              error: error.message,
+              last_event_at: new Date().toISOString()
+            })
+            .eq('id', recipient.id);
+
+          failureCount++;
         }
-      }
-
-      // Update campaign status and statistics
-      const newStats = {
-        ...campaign.statistics,
-        emails_sent: (campaign.statistics?.emails_sent || 0) + emailsSent,
-        emails_failed: (campaign.statistics?.emails_failed || 0) + emailsFailed,
-        last_sent_at: new Date().toISOString()
-      };
-
-      await supabase
-        .from('email_campaigns')
-        .update({
-          status: emailsFailed === 0 ? 'sent' : 'partially_sent',
-          statistics: newStats
-        })
-        .eq('id', campaignId);
+      }));
     }
+
+    const currentStats = campaign.statistics || {};
+    await supabase
+      .from('email_campaigns')
+      .update({ 
+        status: 'sent',
+        statistics: {
+          ...currentStats,
+          sent: successCount,
+          failed: failureCount,
+          total_recipients: recipients.length,
+          sent_at: new Date().toISOString()
+        }
+      })
+      .eq('id', campaignId);
 
     return new Response(JSON.stringify({
       success: true,
-      emailsSent,
-      emailsFailed,
-      message: testEmail ? 'Test email sent' : `Campaign sent to ${emailsSent} recipients`
+      message: 'Campaign sent successfully',
+      statistics: {
+        sent: successCount,
+        failed: failureCount,
+        total: recipients.length
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

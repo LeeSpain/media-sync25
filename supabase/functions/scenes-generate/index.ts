@@ -9,7 +9,7 @@ const corsHeaders = {
 
 interface SceneGenerateRequest {
   videoJobId: string;
-  script: string | any[];
+  script: string;
   style: string;
 }
 
@@ -26,20 +26,25 @@ serve(async (req) => {
 
     const { videoJobId, script, style }: SceneGenerateRequest = await req.json();
 
-    // Update video job status
     await supabase
       .from('video_jobs')
       .update({ 
         status: 'generating_scenes',
-        metadata: { processing_steps: ['script_generated', 'scenes_generating'] }
+        metadata: { 
+          processing_steps: ['script_generated', 'generating_scenes']
+        }
       })
       .eq('id', videoJobId);
 
-    // Generate visual descriptions for each scene
-    const scenes = Array.isArray(script) ? script : [{ time: 0, text: script }];
-    const generatedScenes = [];
+    const scriptSegments = script.split(/[.!?]+/).filter(segment => segment.trim().length > 0);
+    const scenes = [];
 
-    for (const scene of scenes) {
+    for (let i = 0; i < scriptSegments.length; i++) {
+      const segment = scriptSegments[i].trim();
+      if (!segment) continue;
+
+      const scenePrompt = `Create a visual scene description for: "${segment}". Style: ${style}. Return JSON with: visual_description, camera_angle, lighting, props, duration.`;
+
       const sceneResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -47,78 +52,70 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4.1-2025-04-14',
-          max_completion_tokens: 500,
+          model: 'gpt-4o-mini',
           messages: [
-            {
-              role: 'system',
-              content: `You are a visual director creating scene descriptions for video production. Style: ${style}`
-            },
-            {
-              role: 'user',
-              content: `Create a detailed visual scene description for this script segment: "${scene.text}"
-              
-              Return JSON with:
-              - visual_description: Detailed description of what should be shown
-              - camera_angle: Camera positioning and movement
-              - lighting: Lighting setup description
-              - props: Required props and elements
-              - duration: Scene duration in seconds`
-            }
+            { role: 'system', content: 'You are a video director. Always respond with valid JSON.' },
+            { role: 'user', content: scenePrompt }
           ],
+          max_tokens: 300,
+          temperature: 0.7,
         }),
       });
 
-      if (sceneResponse.ok) {
-        const sceneData = await sceneResponse.json();
-        try {
-          const parsedScene = JSON.parse(sceneData.choices[0].message.content);
-          generatedScenes.push({
-            ...scene,
-            ...parsedScene,
-            scene_id: `scene_${generatedScenes.length + 1}`
-          });
-        } catch (parseError) {
-          generatedScenes.push({
-            ...scene,
-            visual_description: sceneData.choices[0].message.content,
-            scene_id: `scene_${generatedScenes.length + 1}`
-          });
-        }
+      if (!sceneResponse.ok) {
+        throw new Error(`Failed to generate scene ${i + 1}`);
       }
+
+      const sceneData = await sceneResponse.json();
+      let sceneDetails;
+      
+      try {
+        sceneDetails = JSON.parse(sceneData.choices[0].message.content);
+      } catch (parseError) {
+        sceneDetails = {
+          visual_description: `Scene showing: ${segment}`,
+          camera_angle: 'Medium shot',
+          lighting: 'Natural lighting',
+          props: 'Minimal props',
+          duration: 5
+        };
+      }
+
+      scenes.push({
+        scene_number: i + 1,
+        script_text: segment,
+        ...sceneDetails
+      });
     }
 
-    // Generate TTS audio for the script
     try {
       await supabase.functions.invoke('tts-elevenlabs', {
         body: {
           videoJobId,
-          script: scenes.map(s => s.text).join(' '),
-          voice: 'alloy'
-        },
-        headers: {
-          Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+          text: script,
+          voice: 'Aria',
+          model: 'eleven_multilingual_v2'
         }
       });
-    } catch (error) {
-      console.warn('Failed to trigger TTS generation:', error);
+    } catch (ttsError) {
+      console.error('TTS generation failed:', ttsError);
     }
 
-    // Update video job with generated scenes
     await supabase
       .from('video_jobs')
       .update({ 
         status: 'scenes_generated',
         metadata: { 
           processing_steps: ['script_generated', 'scenes_generated'],
-          scenes: generatedScenes
+          scenes,
+          total_scenes: scenes.length
         }
       })
       .eq('id', videoJobId);
 
     return new Response(JSON.stringify({
       success: true,
-      scenes: generatedScenes,
+      scenes,
       message: 'Scenes generated successfully'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -127,18 +124,22 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in scenes-generate:', error);
     
-    // Update video job status to failed
-    try {
-      const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const { videoJobId } = await req.json().catch(() => ({}));
+    if (videoJobId) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
       await supabase
         .from('video_jobs')
         .update({ 
           status: 'failed',
-          metadata: { error: error.message }
+          metadata: { 
+            error: error.message,
+            processing_steps: ['script_generated', 'failed']
+          }
         })
-        .eq('id', req.url.includes('videoJobId') ? new URL(req.url).searchParams.get('videoJobId') : '');
-    } catch (updateError) {
-      console.error('Failed to update video job status:', updateError);
+        .eq('id', videoJobId);
     }
 
     return new Response(

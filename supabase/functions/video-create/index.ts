@@ -11,8 +11,8 @@ interface VideoCreateRequest {
   businessId: string;
   topic: string;
   script?: string;
-  style?: 'professional' | 'casual' | 'animated';
-  duration?: number; // in seconds
+  style?: string;
+  duration?: number;
 }
 
 serve(async (req) => {
@@ -26,37 +26,33 @@ serve(async (req) => {
     const openaiKey = Deno.env.get('OPENAI_API_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { businessId, topic, script, style = 'professional', duration = 60 }: VideoCreateRequest = await req.json();
-
-    // Get user from auth header
-    const authHeader = req.headers.get('authorization');
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Authorization header required');
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
+    const { businessId, topic, script, style = 'professional', duration = 60 }: VideoCreateRequest = await req.json();
 
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (authError || !user) {
-      throw new Error('Invalid authentication');
+      throw new Error('Authentication failed');
     }
 
-    // Get business details
     const { data: business, error: businessError } = await supabase
       .from('businesses')
       .select('*')
       .eq('id', businessId)
+      .eq('created_by', user.id)
       .single();
 
     if (businessError || !business) {
-      throw new Error('Business not found');
+      throw new Error('Business not found or access denied');
     }
 
     let finalScript = script;
-    
-    // Generate script if not provided
     if (!finalScript) {
+      const scriptPrompt = `Create a engaging ${duration}-second video script about "${topic}" for ${business.name}. Keep it conversational and ${style} in tone.`;
+
       const scriptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -64,43 +60,24 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4.1-2025-04-14',
-          max_completion_tokens: 1000,
+          model: 'gpt-4o-mini',
           messages: [
-            {
-              role: 'system',
-              content: `You are a video script writer. Create engaging ${duration}-second video scripts for businesses.`
-            },
-            {
-              role: 'user',
-              content: `Create a ${duration}-second video script about "${topic}" for ${business.name}. 
-              Business description: ${business.description}
-              Industry: ${business.industry}
-              Style: ${style}
-              
-              The script should be engaging, professional, and include timing markers. Format as JSON with:
-              - title: Video title
-              - script: Array of { time: number, text: string, action?: string }
-              - estimated_duration: number in seconds`
-            }
+            { role: 'system', content: 'You are a professional video script writer.' },
+            { role: 'user', content: scriptPrompt }
           ],
+          max_tokens: 500,
+          temperature: 0.7,
         }),
       });
 
       if (!scriptResponse.ok) {
-        throw new Error('Failed to generate script');
+        throw new Error('Failed to generate script with OpenAI');
       }
 
       const scriptData = await scriptResponse.json();
-      try {
-        const parsedScript = JSON.parse(scriptData.choices[0].message.content);
-        finalScript = parsedScript.script;
-      } catch (parseError) {
-        finalScript = scriptData.choices[0].message.content;
-      }
+      finalScript = scriptData.choices[0].message.content.trim();
     }
 
-    // Create video job in database
     const { data: videoJob, error: jobError } = await supabase
       .from('video_jobs')
       .insert({
@@ -112,38 +89,45 @@ serve(async (req) => {
         duration,
         status: 'processing',
         metadata: {
-          created_at: new Date().toISOString(),
-          processing_steps: ['script_generated']
+          processing_steps: ['script_generated'],
+          created_at: new Date().toISOString()
         }
       })
       .select()
       .single();
 
     if (jobError) {
-      throw new Error('Failed to create video job');
+      throw new Error(`Failed to create video job: ${jobError.message}`);
     }
 
-    // Start async video generation process
     try {
-      // Call scenes generation
       await supabase.functions.invoke('scenes-generate', {
         body: {
           videoJobId: videoJob.id,
           script: finalScript,
           style
-        },
-        headers: {
-          Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
         }
       });
-    } catch (error) {
-      console.warn('Failed to trigger scenes generation:', error);
+    } catch (invokeError) {
+      console.error('Failed to invoke scenes-generate:', invokeError);
+      await supabase
+        .from('video_jobs')
+        .update({ 
+          status: 'failed',
+          metadata: { 
+            error: 'Failed to start scene generation process',
+            processing_steps: ['script_generated', 'failed']
+          }
+        })
+        .eq('id', videoJob.id);
+      
+      throw new Error('Failed to start video processing pipeline');
     }
 
     return new Response(JSON.stringify({
       success: true,
       videoJob,
-      message: 'Video creation started'
+      message: 'Video creation started successfully'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
