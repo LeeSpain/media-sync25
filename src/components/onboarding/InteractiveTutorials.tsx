@@ -200,11 +200,16 @@ export default function InteractiveTutorials({ isOpen, onClose }: InteractiveTut
     if (!user) return;
 
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from("profiles")
         .select("tutorial_progress")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error loading tutorial progress:", error);
+        return;
+      }
 
       if (profile?.tutorial_progress && Array.isArray(profile.tutorial_progress)) {
         setCompletedTutorials(profile.tutorial_progress as string[]);
@@ -221,13 +226,18 @@ export default function InteractiveTutorials({ isOpen, onClose }: InteractiveTut
     setCompletedTutorials(newCompleted);
 
     try {
-      await supabase
+      const { error } = await supabase
         .from("profiles")
         .upsert({
           id: user.id,
           tutorial_progress: newCompleted,
           updated_at: new Date().toISOString()
         });
+
+      if (error) {
+        console.error("Error saving tutorial progress:", error);
+        return;
+      }
 
       toast({
         title: "Tutorial completed!",
