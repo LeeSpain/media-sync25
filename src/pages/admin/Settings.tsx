@@ -1,6 +1,7 @@
 import SEO from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ConnectionsPanel from "@/components/admin/panels/ConnectionsPanel";
+import APIKeysPanel from "@/components/admin/panels/APIKeysPanel";
 
 const AdminSettingsPage = () => {
   const canonical = typeof window !== "undefined" ? window.location.href : undefined;
