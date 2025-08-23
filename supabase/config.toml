@@ -23,3 +23,33 @@ verify_jwt = true
 
 [functions.run-scheduler]
 verify_jwt = false
+
+[functions.master-agent]
+verify_jwt = true
+
+[functions.research-agent]
+verify_jwt = false
+
+[functions.company-research]
+verify_jwt = true
+
+[functions.copywriter-agent]
+verify_jwt = true
+
+[functions.analyst-agent]
+verify_jwt = true
+
+[functions.closer-agent]
+verify_jwt = true
+
+[functions.listener-agent]
+verify_jwt = true
+
+[functions.messenger-agent]
+verify_jwt = true
+
+[functions.performance-analytics]
+verify_jwt = true
+
+[functions.test-connectivity]
+verify_jwt = false
