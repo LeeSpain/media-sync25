@@ -116,9 +116,9 @@ export default function APIKeysPanel() {
                 <div className="flex items-center gap-2">
                   <Label className="font-medium">{key.name}</Label>
                   {key.configured ? (
-                    <Check className="h-4 w-4 text-green-500" />
+                    <Check className="h-4 w-4 text-primary" />
                   ) : (
-                    <X className="h-4 w-4 text-red-500" />
+                    <X className="h-4 w-4 text-destructive" />
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -161,7 +161,7 @@ export default function APIKeysPanel() {
                 <div className="flex items-center gap-2">
                   <Label className="font-medium">{key.name}</Label>
                   {key.configured ? (
-                    <Check className="h-4 w-4 text-green-500" />
+                    <Check className="h-4 w-4 text-primary" />
                   ) : (
                     <X className="h-4 w-4 text-muted-foreground" />
                   )}

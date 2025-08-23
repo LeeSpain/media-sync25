@@ -31,6 +31,20 @@ const AdminSettingsPage = () => {
         <article>
           <Card>
             <CardHeader>
+              <CardTitle>API Keys Management</CardTitle>
+              <CardDescription>
+                Securely configure API keys for platform integrations and services.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <APIKeysPanel />
+            </CardContent>
+          </Card>
+        </article>
+
+        <article>
+          <Card>
+            <CardHeader>
               <CardTitle>Provider setup</CardTitle>
               <CardDescription>
                 OAuth credentials are stored securely in Supabase. Use the chat to add provider secrets and we’ll enable the connect flows.
